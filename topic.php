@@ -7,37 +7,46 @@ $topic = null;
 $posts = [];
 
 if ($pdo && $topicId) {
-    $stmt = $pdo->prepare('SELECT t.id, t.title, t.created_at, u.username FROM topics t JOIN users u ON u.id = t.user_id WHERE t.id = ?');
+    $stmt = $pdo->prepare('SELECT t.id, t.title, t.created_at, u.username, u.role, u.id AS user_id FROM topics t JOIN users u ON u.id = t.user_id WHERE t.id = ?');
     $stmt->execute([$topicId]);
     $topic = $stmt->fetch();
 
-    $stmt = $pdo->prepare('SELECT p.id, p.content, p.created_at, u.username, u.avatar FROM posts p JOIN users u ON u.id = p.user_id WHERE p.topic_id = ? ORDER BY p.created_at');
+    $stmt = $pdo->prepare('SELECT p.id, p.content, p.created_at, u.username, u.avatar, u.role, u.id AS user_id FROM posts p JOIN users u ON u.id = p.user_id WHERE p.topic_id = ? ORDER BY p.created_at');
     $stmt->execute([$topicId]);
     $posts = $stmt->fetchAll();
 }
 
 if (!$topic) {
-    $topic = ['title' => 'Bienvenue sur le forum', 'created_at' => '2026-02-05 10:15:00', 'username' => 'admin'];
+    $topic = ['title' => 'Bienvenue sur le forum', 'created_at' => '2026-02-05 10:15:00', 'username' => 'admin', 'role' => 'admin', 'user_id' => 1];
     $posts = [
-        ['content' => 'Ravi de vous accueillir sur ce forum open-source.', 'created_at' => '2026-02-05 10:20:00', 'username' => 'admin', 'avatar' => ''],
-        ['content' => 'Merci ! HATE de contribuer.', 'created_at' => '2026-02-05 11:00:00', 'username' => 'alex', 'avatar' => ''],
+        ['content' => 'Ravi de vous accueillir sur ce forum open-source.', 'created_at' => '2026-02-05 10:20:00', 'username' => 'admin', 'avatar' => '', 'role' => 'admin', 'user_id' => 1],
+        ['content' => 'Merci ! HATE de contribuer.', 'created_at' => '2026-02-05 11:00:00', 'username' => 'alex', 'avatar' => '', 'role' => 'member', 'user_id' => 2],
     ];
 }
 ?>
 <section class="mb-4">
     <h1 class="h4 mb-1"><?php echo e($topic['title']); ?></h1>
-    <p class="text-muted">Par <?php echo e($topic['username']); ?> · <?php echo e(format_date($topic['created_at'])); ?></p>
+    <p class="text-muted">
+        Par <a class="text-decoration-none" href="profile.php?id=<?php echo e((string) $topic['user_id']); ?>"><?php echo e($topic['username']); ?></a>
+        <span class="<?php echo e(role_badge_class($topic['role'] ?? null)); ?>"><?php echo e(role_label($topic['role'] ?? null)); ?></span>
+        · <?php echo e(format_date($topic['created_at'])); ?>
+    </p>
 </section>
 
 <div class="vstack gap-3">
     <?php foreach ($posts as $post): ?>
         <div class="card shadow-sm">
             <div class="card-body">
-                <div class="d-flex align-items-center gap-3 mb-2">
+                <div class="post-header mb-2">
                     <?php $avatar = $post['avatar'] ?: 'assets/default_user.jpg'; ?>
                     <img class="profile-avatar" src="<?php echo e($avatar); ?>" alt="avatar">
                     <div>
-                        <strong><?php echo e($post['username']); ?></strong><br>
+                        <div class="post-meta">
+                            <a class="fw-semibold text-decoration-none" href="profile.php?id=<?php echo e((string) $post['user_id']); ?>">
+                                <?php echo e($post['username']); ?>
+                            </a>
+                            <span class="<?php echo e(role_badge_class($post['role'] ?? null)); ?>"><?php echo e(role_label($post['role'] ?? null)); ?></span>
+                        </div>
                         <small class="text-muted"><?php echo e(format_date($post['created_at'])); ?></small>
                     </div>
                 </div>

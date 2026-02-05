@@ -2,6 +2,8 @@
 $appName = $config['app']['name'] ?? 'Forum PHP';
 $baseUrl = $config['app']['base_url'] ?? '';
 $isLogged = is_logged_in();
+$username = current_username();
+$role = current_user_role();
 ?>
 <!doctype html>
 <html lang="fr">
@@ -29,7 +31,11 @@ $isLogged = is_logged_in();
             </ul>
             <ul class="navbar-nav">
                 <?php if ($isLogged): ?>
-                    <li class="nav-item"><a class="nav-link" href="profile.php"><i class="bi bi-person-circle me-1"></i>Profil</a></li>
+                    <li class="nav-item d-flex align-items-center me-2">
+                        <span class="<?php echo e(role_badge_class($role)); ?>"><?php echo e(role_label($role)); ?></span>
+                    </li>
+                    <li class="nav-item"><a class="nav-link" href="profile.php"><i class="bi bi-person-circle me-1"></i><?php echo e($username ?? 'Profil'); ?></a></li>
+                    <li class="nav-item"><a class="nav-link" href="logout.php">Deconnexion</a></li>
                 <?php else: ?>
                     <li class="nav-item"><a class="nav-link" href="login.php">Connexion</a></li>
                     <li class="nav-item"><a class="nav-link" href="register.php">Inscription</a></li>

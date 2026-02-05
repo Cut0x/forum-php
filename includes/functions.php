@@ -24,9 +24,37 @@ function current_user_id(): ?int
     return $_SESSION['user_id'] ?? null;
 }
 
+function current_username(): ?string
+{
+    return $_SESSION['username'] ?? null;
+}
+
+function current_user_role(): ?string
+{
+    return $_SESSION['role'] ?? null;
+}
+
 function is_logged_in(): bool
 {
     return current_user_id() !== null;
+}
+
+function role_badge_class(?string $role): string
+{
+    return match ($role) {
+        'admin' => 'role-badge role-admin',
+        'moderator' => 'role-badge role-moderator',
+        default => 'role-badge role-member',
+    };
+}
+
+function role_label(?string $role): string
+{
+    return match ($role) {
+        'admin' => 'Admin',
+        'moderator' => 'Modo',
+        default => 'Membre',
+    };
 }
 
 function ensure_config(): bool

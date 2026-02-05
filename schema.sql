@@ -6,6 +6,7 @@ CREATE TABLE users (
     username VARCHAR(50) NOT NULL UNIQUE,
     email VARCHAR(190) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
+    role VARCHAR(20) NOT NULL DEFAULT 'member',
     bio TEXT NULL,
     avatar VARCHAR(255) NULL,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -60,8 +61,8 @@ CREATE TABLE user_links (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
-INSERT INTO users (username, email, password_hash, bio, avatar)
-VALUES ('admin', 'admin@example.com', '$2y$10$examplehash', 'Developpeur et mainteneur du forum.', NULL);
+INSERT INTO users (username, email, password_hash, role, bio, avatar)
+VALUES ('admin', 'admin@example.com', '$2y$10$1fhHskges6WOwXtC5nDUcui2k07hvQzcnyZoQZooXiz51Rswegjfa', 'admin', 'Developpeur et mainteneur du forum.', NULL);
 
 INSERT INTO categories (name, description, sort_order) VALUES
 ('Annonces', 'Nouveautes et mises a jour.', 1),

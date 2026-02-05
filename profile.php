@@ -6,9 +6,72 @@ if (!is_logged_in()) {
     exit;
 }
 
+$userId = (int)($_GET['id'] ?? current_user_id());
+$canEdit = $userId === current_user_id();
+$message = '';
+$error = '';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $pdo && $canEdit) {
+    $bio = trim($_POST['bio'] ?? '');
+    $links = [];
+
+    for ($i = 1; $i <= 3; $i++) {
+        $label = trim($_POST['link_label_' . $i] ?? '');
+        $url = trim($_POST['link_url_' . $i] ?? '');
+        if ($label && $url) {
+            $links[] = ['label' => $label, 'url' => $url];
+        }
+    }
+
+    $avatarPath = null;
+    if (!empty($_FILES['avatar']['name'])) {
+        $file = $_FILES['avatar'];
+        $allowed = ['image/jpeg' => 'jpg', 'image/png' => 'png'];
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+        $mime = finfo_file($finfo, $file['tmp_name']);
+        finfo_close($finfo);
+
+        if (isset($allowed[$mime]) && $file['size'] <= 2 * 1024 * 1024) {
+            $ext = $allowed[$mime];
+            $filename = 'user_' . $userId . '_' . time() . '.' . $ext;
+            $targetDir = __DIR__ . '/uploads/avatars';
+            if (!is_dir($targetDir)) {
+                mkdir($targetDir, 0755, true);
+            }
+            $target = $targetDir . '/' . $filename;
+            if (move_uploaded_file($file['tmp_name'], $target)) {
+                $avatarPath = 'uploads/avatars/' . $filename;
+            }
+        } else {
+            $error = 'Avatar invalide.';
+        }
+    }
+
+    if (!$error) {
+        if ($avatarPath) {
+            $stmt = $pdo->prepare('UPDATE users SET bio = ?, avatar = ? WHERE id = ?');
+            $stmt->execute([$bio, $avatarPath, $userId]);
+        } else {
+            $stmt = $pdo->prepare('UPDATE users SET bio = ? WHERE id = ?');
+            $stmt->execute([$bio, $userId]);
+        }
+
+        $stmt = $pdo->prepare('DELETE FROM user_links WHERE user_id = ?');
+        $stmt->execute([$userId]);
+
+        if ($links) {
+            $stmt = $pdo->prepare('INSERT INTO user_links (user_id, label, url) VALUES (?, ?, ?)');
+            foreach ($links as $link) {
+                $stmt->execute([$userId, $link['label'], $link['url']]);
+            }
+        }
+
+        $message = 'Profil mis a jour.';
+    }
+}
+
 require __DIR__ . '/includes/header.php';
 
-$userId = (int)($_GET['id'] ?? current_user_id());
 $user = null;
 $badges = [];
 $links = [];
@@ -19,7 +82,7 @@ $stats = [
 ];
 
 if ($pdo) {
-    $stmt = $pdo->prepare('SELECT id, username, bio, avatar FROM users WHERE id = ?');
+    $stmt = $pdo->prepare('SELECT id, username, bio, avatar, role FROM users WHERE id = ?');
     $stmt->execute([$userId]);
     $user = $stmt->fetch();
 
@@ -47,6 +110,7 @@ if (!$user) {
         'username' => 'admin',
         'bio' => 'Developpeur et mainteneur du forum.',
         'avatar' => 'assets/default_user.jpg',
+        'role' => 'admin',
     ];
     $badges = [
         ['name' => 'Fondateur', 'color' => '#0d6efd'],
@@ -71,13 +135,21 @@ $avatar = $user['avatar'] ?: 'assets/default_user.jpg';
         <div class="flex-grow-1">
             <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
                 <div>
-                    <h1 class="h4 mb-1"><?php echo e($user['username']); ?></h1>
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        <h1 class="h4 mb-0"><?php echo e($user['username']); ?></h1>
+                        <span class="<?php echo e(role_badge_class($user['role'] ?? null)); ?>" data-bs-toggle="tooltip" title="Role utilisateur">
+                            <?php echo e(role_label($user['role'] ?? null)); ?>
+                        </span>
+                    </div>
                     <p class="text-muted mb-0"><?php echo e($user['bio']); ?></p>
                 </div>
-                <div class="d-flex gap-2">
-                    <button class="btn btn-outline-primary" type="button"><i class="bi bi-pencil-square me-1"></i>Editer</button>
-                    <button class="btn btn-primary" type="button"><i class="bi bi-shield-check me-1"></i>Badges</button>
-                </div>
+                <?php if ($canEdit): ?>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#editProfile">
+                            <i class="bi bi-pencil-square me-1"></i>Editer
+                        </button>
+                    </div>
+                <?php endif; ?>
             </div>
             <div class="d-flex flex-wrap gap-2 mt-3">
                 <?php foreach ($badges as $badge): ?>
@@ -89,6 +161,59 @@ $avatar = $user['avatar'] ?: 'assets/default_user.jpg';
         </div>
     </div>
 </section>
+
+<?php if ($canEdit): ?>
+    <div class="collapse mb-4" id="editProfile">
+        <div class="card shadow-sm">
+            <div class="card-header bg-white">Profil</div>
+            <div class="card-body">
+                <?php if ($message): ?>
+                    <div class="alert alert-success py-2 mb-3"><?php echo e($message); ?></div>
+                <?php endif; ?>
+                <?php if ($error): ?>
+                    <div class="alert alert-danger py-2 mb-3"><?php echo e($error); ?></div>
+                <?php endif; ?>
+                <form method="post" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label class="form-label">Bio</label>
+                        <textarea class="form-control" name="bio" rows="3"><?php echo e($user['bio']); ?></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Avatar</label>
+                        <input class="form-control" name="avatar" type="file" accept="image/png, image/jpeg">
+                    </div>
+                    <div class="row g-2">
+                        <div class="col-md-6">
+                            <label class="form-label">Lien 1</label>
+                            <input class="form-control" name="link_label_1" value="<?php echo e($links[0]['label'] ?? ''); ?>" placeholder="Label">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">URL 1</label>
+                            <input class="form-control" name="link_url_1" value="<?php echo e($links[0]['url'] ?? ''); ?>" placeholder="https://">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Lien 2</label>
+                            <input class="form-control" name="link_label_2" value="<?php echo e($links[1]['label'] ?? ''); ?>" placeholder="Label">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">URL 2</label>
+                            <input class="form-control" name="link_url_2" value="<?php echo e($links[1]['url'] ?? ''); ?>" placeholder="https://">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Lien 3</label>
+                            <input class="form-control" name="link_label_3" value="<?php echo e($links[2]['label'] ?? ''); ?>" placeholder="Label">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">URL 3</label>
+                            <input class="form-control" name="link_url_3" value="<?php echo e($links[2]['url'] ?? ''); ?>" placeholder="https://">
+                        </div>
+                    </div>
+                    <button class="btn btn-primary mt-3" type="submit">Enregistrer</button>
+                </form>
+            </div>
+        </div>
+    </div>
+<?php endif; ?>
 
 <div class="row g-3">
     <div class="col-lg-4">
