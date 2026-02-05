@@ -4,9 +4,10 @@ $baseUrl = $config['app']['base_url'] ?? '';
 $isLogged = is_logged_in();
 $username = current_username();
 $role = current_user_role();
+$theme = current_theme();
 ?>
 <!doctype html>
-<html lang="fr">
+<html lang="fr" data-bs-theme="<?php echo e($theme); ?>">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -15,7 +16,7 @@ $role = current_user_role();
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
     <link href="<?php echo asset('assets/style.css'); ?>" rel="stylesheet">
 </head>
-<body class="bg-light d-flex flex-column min-vh-100">
+<body class="app-body d-flex flex-column min-vh-100">
 <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
     <div class="container">
         <a class="navbar-brand fw-semibold" href="<?php echo e($baseUrl ?: 'index.php'); ?>">
@@ -30,11 +31,23 @@ $role = current_user_role();
                 <li class="nav-item"><a class="nav-link" href="categories.php">Categories</a></li>
             </ul>
             <ul class="navbar-nav">
+                <li class="nav-item">
+                    <a class="nav-link" href="theme.php" data-bs-toggle="tooltip" title="Basculer le theme">
+                        <?php if ($theme === 'dark'): ?>
+                            <i class="bi bi-sun"></i>
+                        <?php else: ?>
+                            <i class="bi bi-moon-stars"></i>
+                        <?php endif; ?>
+                    </a>
+                </li>
                 <?php if ($isLogged): ?>
                     <li class="nav-item d-flex align-items-center me-2">
                         <span class="<?php echo e(role_badge_class($role)); ?>"><?php echo e(role_label($role)); ?></span>
                     </li>
                     <li class="nav-item"><a class="nav-link" href="profile.php"><i class="bi bi-person-circle me-1"></i><?php echo e($username ?? 'Profil'); ?></a></li>
+                    <?php if (is_admin()): ?>
+                        <li class="nav-item"><a class="nav-link" href="admin.php"><i class="bi bi-shield-lock me-1"></i>Admin</a></li>
+                    <?php endif; ?>
                     <li class="nav-item"><a class="nav-link" href="logout.php">Deconnexion</a></li>
                 <?php else: ?>
                     <li class="nav-item"><a class="nav-link" href="login.php">Connexion</a></li>

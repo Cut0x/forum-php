@@ -1,6 +1,6 @@
-# Forum PHP (template open-source)
+# Forum PHP
 
-Template de forum en PHP + MySQL (PDO) avec Bootstrap 5.
+Template de forum en PHP + MySQL et avec Bootstrap 5.
 
 ## Fonctionnalites
 - Categories et sujets
@@ -11,7 +11,7 @@ Template de forum en PHP + MySQL (PDO) avec Bootstrap 5.
 ## Installation rapide
 1. Copier `exemple.config.php` vers `config.php` et adapter les valeurs.
 2. Importer `schema.sql` dans votre base MySQL.
-3. Ouvrir `http://localhost/forum-php`.
+3. Ouvrir `http://localhost/forum-php` (si vous utilisez XAMPP).
 
 ## Arborescence
 - `index.php` page d'accueil

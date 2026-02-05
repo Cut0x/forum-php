@@ -1,13 +1,13 @@
 <?php
 require __DIR__ . '/includes/bootstrap.php';
 
-if (!is_logged_in()) {
-    header('Location: login.php');
-    exit;
+if (isset($_GET['id'])) {
+    $userId = (int) $_GET['id'];
+} else {
+    $userId = is_logged_in() ? current_user_id() : 0;
 }
 
-$userId = (int)($_GET['id'] ?? current_user_id());
-$canEdit = $userId === current_user_id();
+$canEdit = is_logged_in() && $userId === current_user_id();
 $message = '';
 $error = '';
 
@@ -39,8 +39,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $pdo && $canEdit) {
                 mkdir($targetDir, 0755, true);
             }
             $target = $targetDir . '/' . $filename;
-            if (move_uploaded_file($file['tmp_name'], $target)) {
+
+            $source = null;
+            if ($mime === 'image/jpeg') {
+                $source = imagecreatefromjpeg($file['tmp_name']);
+            } elseif ($mime === 'image/png') {
+                $source = imagecreatefrompng($file['tmp_name']);
+            }
+
+            if ($source) {
+                $width = imagesx($source);
+                $height = imagesy($source);
+                $size = min($width, $height);
+                $x = (int) (($width - $size) / 2);
+                $y = (int) (($height - $size) / 2);
+
+                $canvas = imagecreatetruecolor(256, 256);
+                imagecopyresampled($canvas, $source, 0, 0, $x, $y, 256, 256, $size, $size);
+
+                if ($mime === 'image/jpeg') {
+                    imagejpeg($canvas, $target, 90);
+                } else {
+                    imagepng($canvas, $target);
+                }
+
+                imagedestroy($canvas);
+                imagedestroy($source);
                 $avatarPath = 'uploads/avatars/' . $filename;
+            } else {
+                $error = 'Avatar invalide.';
             }
         } else {
             $error = 'Avatar invalide.';
@@ -80,13 +107,15 @@ $stats = [
     'posts' => 0,
     'badges' => 0,
 ];
+$recentTopics = [];
+$recentPosts = [];
 
-if ($pdo) {
+if ($pdo && $userId) {
     $stmt = $pdo->prepare('SELECT id, username, bio, avatar, role FROM users WHERE id = ?');
     $stmt->execute([$userId]);
     $user = $stmt->fetch();
 
-    $stmt = $pdo->prepare('SELECT b.name, b.color FROM badges b JOIN user_badges ub ON ub.badge_id = b.id WHERE ub.user_id = ?');
+    $stmt = $pdo->prepare('SELECT b.name, b.color, b.icon FROM badges b JOIN user_badges ub ON ub.badge_id = b.id WHERE ub.user_id = ?');
     $stmt->execute([$userId]);
     $badges = $stmt->fetchAll();
 
@@ -103,6 +132,14 @@ if ($pdo) {
     $stats['posts'] = (int) $stmt->fetchColumn();
 
     $stats['badges'] = count($badges);
+
+    $stmt = $pdo->prepare('SELECT id, title, created_at FROM topics WHERE user_id = ? ORDER BY created_at DESC LIMIT 3');
+    $stmt->execute([$userId]);
+    $recentTopics = $stmt->fetchAll();
+
+    $stmt = $pdo->prepare('SELECT p.id, p.created_at, p.topic_id, t.title AS topic_title FROM posts p JOIN topics t ON t.id = p.topic_id WHERE p.user_id = ? ORDER BY p.created_at DESC LIMIT 3');
+    $stmt->execute([$userId]);
+    $recentPosts = $stmt->fetchAll();
 }
 
 if (!$user) {
@@ -113,8 +150,8 @@ if (!$user) {
         'role' => 'admin',
     ];
     $badges = [
-        ['name' => 'Fondateur', 'color' => '#0d6efd'],
-        ['name' => 'Contributeur', 'color' => '#198754'],
+        ['name' => 'Premier message', 'color' => '#4f8cff', 'icon' => 'assets/badges/starter.png'],
+        ['name' => '10 messages', 'color' => '#00d1b2', 'icon' => 'assets/badges/writer.png'],
     ];
     $links = [
         ['label' => 'GitHub', 'url' => 'https://github.com/'],
@@ -124,6 +161,12 @@ if (!$user) {
         'topics' => 12,
         'posts' => 48,
         'badges' => count($badges),
+    ];
+    $recentTopics = [
+        ['id' => 1, 'title' => 'Bienvenue sur le forum', 'created_at' => '2026-02-05 10:15:00'],
+    ];
+    $recentPosts = [
+        ['id' => 1, 'created_at' => '2026-02-05 10:20:00', 'topic_id' => 1, 'topic_title' => 'Bienvenue sur le forum'],
     ];
 }
 
@@ -153,9 +196,7 @@ $avatar = $user['avatar'] ?: 'assets/default_user.jpg';
             </div>
             <div class="d-flex flex-wrap gap-2 mt-3">
                 <?php foreach ($badges as $badge): ?>
-                    <span class="badge" style="background: <?php echo e($badge['color']); ?>;" data-bs-toggle="tooltip" title="Badge obtenu">
-                        <?php echo e($badge['name']); ?>
-                    </span>
+                    <img class="badge-icon" src="<?php echo e($badge['icon']); ?>" alt="badge" data-bs-toggle="tooltip" title="<?php echo e($badge['name']); ?>">
                 <?php endforeach; ?>
             </div>
         </div>
@@ -250,6 +291,41 @@ $avatar = $user['avatar'] ?: 'assets/default_user.jpg';
         </div>
     </div>
 </div>
+
+<?php if ($canEdit): ?>
+    <div class="row g-3 mt-1">
+        <div class="col-lg-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">Activite recente</div>
+                <div class="list-group list-group-flush">
+                    <?php foreach ($recentTopics as $topic): ?>
+                        <a class="list-group-item list-group-item-action" href="topic.php?id=<?php echo e((string) $topic['id']); ?>">
+                            <div class="d-flex justify-content-between">
+                                <span><?php echo e($topic['title']); ?></span>
+                                <small class="text-muted"><?php echo e(format_date($topic['created_at'])); ?></small>
+                            </div>
+                        </a>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">Derniers messages</div>
+                <div class="list-group list-group-flush">
+                    <?php foreach ($recentPosts as $post): ?>
+                        <a class="list-group-item list-group-item-action" href="topic.php?id=<?php echo e((string) $post['topic_id']); ?>">
+                            <div class="d-flex justify-content-between">
+                                <span><?php echo e($post['topic_title']); ?></span>
+                                <small class="text-muted"><?php echo e(format_date($post['created_at'])); ?></small>
+                            </div>
+                        </a>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+        </div>
+    </div>
+<?php endif; ?>
 
 <div class="card shadow-sm mt-4">
     <div class="card-header bg-white d-flex justify-content-between align-items-center">

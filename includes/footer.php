@@ -1,5 +1,5 @@
 </main>
-<footer class="mt-auto bg-white border-top py-3">
+<footer class="mt-auto app-footer border-top py-3">
     <div class="container d-flex flex-wrap justify-content-between text-muted small">
         <span>Forum</span>
         <span>&copy; 2026</span>
