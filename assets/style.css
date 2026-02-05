@@ -1,6 +1,15 @@
 :root {
     --brand: #0d6efd;
     --accent: #f59f00;
+    --ink: #101828;
+}
+
+body {
+    color: var(--ink);
+}
+
+.navbar-brand {
+    letter-spacing: 0.2px;
 }
 
 .card-category {
@@ -21,6 +30,21 @@
     box-shadow: 0 2px 8px rgba(0,0,0,0.15);
 }
 
+.profile-hero {
+    background: linear-gradient(135deg, #e8f0ff 0%, #f7f9fc 100%);
+    border-radius: 16px;
+}
+
+.stat-card {
+    border: 1px solid rgba(0,0,0,0.06);
+    border-radius: 12px;
+    background: #fff;
+}
+
 .link-list a {
     text-decoration: none;
+}
+
+.link-list a:hover {
+    text-decoration: underline;
 }

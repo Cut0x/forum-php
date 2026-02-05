@@ -24,6 +24,11 @@ function current_user_id(): ?int
     return $_SESSION['user_id'] ?? null;
 }
 
+function is_logged_in(): bool
+{
+    return current_user_id() !== null;
+}
+
 function ensure_config(): bool
 {
     global $config;

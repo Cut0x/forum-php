@@ -22,8 +22,15 @@ if ($pdo) {
 }
 ?>
 <section class="bg-white p-4 rounded shadow-sm mb-4">
-    <h1 class="h3 mb-2">Forum PHP open-source</h1>
-    <p class="text-muted mb-0">Template Bootstrap + MySQL (PDO). Systeme de badges, profils utilisateurs, bios et liens.</p>
+    <div class="d-flex flex-column flex-md-row justify-content-between gap-3">
+        <div>
+            <h1 class="h3 mb-1">Forum</h1>
+            <p class="text-muted mb-0">Discussions, entraide et annonces.</p>
+        </div>
+        <div class="text-md-end">
+            <a class="btn btn-primary" href="new-topic.php"><i class="bi bi-plus-circle me-1"></i>Nouveau sujet</a>
+        </div>
+    </div>
 </section>
 
 <div class="row g-3">
@@ -68,11 +75,5 @@ if ($pdo) {
         </div>
     </div>
 </div>
-
-<?php if (!$pdo): ?>
-    <div class="alert alert-warning mt-4">
-        <strong>Configuration manquante :</strong> Copiez `exemple.config.php` vers `config.php` puis importez `schema.sql`.
-    </div>
-<?php endif; ?>
 
 <?php require __DIR__ . '/includes/footer.php'; ?>

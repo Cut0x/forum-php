@@ -34,7 +34,8 @@ if (!$topic) {
         <div class="card shadow-sm">
             <div class="card-body">
                 <div class="d-flex align-items-center gap-3 mb-2">
-                    <img class="profile-avatar" src="<?php echo e($post['avatar'] ?: 'https://via.placeholder.com/96'); ?>" alt="avatar">
+                    <?php $avatar = $post['avatar'] ?: 'assets/default_user.jpg'; ?>
+                    <img class="profile-avatar" src="<?php echo e($avatar); ?>" alt="avatar">
                     <div>
                         <strong><?php echo e($post['username']); ?></strong><br>
                         <small class="text-muted"><?php echo e(format_date($post['created_at'])); ?></small>
