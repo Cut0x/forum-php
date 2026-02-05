@@ -1,5 +1,6 @@
 <?php
 $pdo = null;
+$dbError = null;
 
 if (ensure_config()) {
     $dsn = sprintf(
@@ -16,5 +17,6 @@ if (ensure_config()) {
         ]);
     } catch (Throwable $e) {
         $pdo = null;
+        $dbError = $e->getMessage();
     }
 }

@@ -12,4 +12,17 @@ return [
         'pass' => '',
         'charset' => 'utf8mb4',
     ],
+    'mail' => [
+        'enabled' => false,
+        'host' => 'smtp.example.com',
+        'user' => 'user@example.com',
+        'pass' => 'password',
+        'port' => 587,
+        'from' => 'no-reply@example.com',
+    ],
+    'hcaptcha' => [
+        'enabled' => false,
+        'site_key' => '',
+        'secret' => '',
+    ],
 ];

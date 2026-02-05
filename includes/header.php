@@ -5,6 +5,27 @@ $isLogged = is_logged_in();
 $username = current_username();
 $role = current_user_role();
 $theme = current_theme();
+$notifCount = 0;
+if ($pdo && $isLogged) {
+    $stmt = $pdo->prepare('SELECT COUNT(*) FROM notifications WHERE user_id = ? AND is_read = 0');
+    $stmt->execute([current_user_id()]);
+    $notifCount = (int) $stmt->fetchColumn();
+}
+$themeVars = [
+    'light_bg' => $pdo ? get_setting($pdo, 'theme_light_bg', '#f1f5f9') : '#f1f5f9',
+    'light_surface' => $pdo ? get_setting($pdo, 'theme_light_surface', '#ffffff') : '#ffffff',
+    'light_text' => $pdo ? get_setting($pdo, 'theme_light_text', '#0f172a') : '#0f172a',
+    'light_muted' => $pdo ? get_setting($pdo, 'theme_light_muted', '#64748b') : '#64748b',
+    'light_primary' => $pdo ? get_setting($pdo, 'theme_light_primary', '#4f8cff') : '#4f8cff',
+    'light_accent' => $pdo ? get_setting($pdo, 'theme_light_accent', '#00d1b2') : '#00d1b2',
+    'dark_bg' => $pdo ? get_setting($pdo, 'theme_dark_bg', '#0b1220') : '#0b1220',
+    'dark_surface' => $pdo ? get_setting($pdo, 'theme_dark_surface', '#0f172a') : '#0f172a',
+    'dark_text' => $pdo ? get_setting($pdo, 'theme_dark_text', '#e2e8f0') : '#e2e8f0',
+    'dark_muted' => $pdo ? get_setting($pdo, 'theme_dark_muted', '#94a3b8') : '#94a3b8',
+    'dark_primary' => $pdo ? get_setting($pdo, 'theme_dark_primary', '#4f8cff') : '#4f8cff',
+    'dark_accent' => $pdo ? get_setting($pdo, 'theme_dark_accent', '#00d1b2') : '#00d1b2',
+    'font' => $pdo ? get_setting($pdo, 'theme_font', '\"Space Grotesk\", system-ui, -apple-system, Segoe UI, sans-serif') : '\"Space Grotesk\", system-ui, -apple-system, Segoe UI, sans-serif',
+];
 ?>
 <!doctype html>
 <html lang="fr" data-bs-theme="<?php echo e($theme); ?>">
@@ -15,6 +36,30 @@ $theme = current_theme();
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
     <link href="<?php echo asset('assets/style.css'); ?>" rel="stylesheet">
+    <style>
+        :root {
+            --brand: <?php echo e($themeVars['light_primary']); ?>;
+            --accent: <?php echo e($themeVars['light_accent']); ?>;
+            --surface: <?php echo e($themeVars['light_surface']); ?>;
+            --surface-2: <?php echo e($themeVars['light_bg']); ?>;
+            --text: <?php echo e($themeVars['light_text']); ?>;
+            --muted: <?php echo e($themeVars['light_muted']); ?>;
+            --font: <?php echo e($themeVars['font']); ?>;
+            --bs-body-bg: <?php echo e($themeVars['light_bg']); ?>;
+            --bs-body-color: <?php echo e($themeVars['light_text']); ?>;
+        }
+
+        [data-bs-theme="dark"] {
+            --brand: <?php echo e($themeVars['dark_primary']); ?>;
+            --accent: <?php echo e($themeVars['dark_accent']); ?>;
+            --surface: <?php echo e($themeVars['dark_surface']); ?>;
+            --surface-2: <?php echo e($themeVars['dark_bg']); ?>;
+            --text: <?php echo e($themeVars['dark_text']); ?>;
+            --muted: <?php echo e($themeVars['dark_muted']); ?>;
+            --bs-body-bg: <?php echo e($themeVars['dark_bg']); ?>;
+            --bs-body-color: <?php echo e($themeVars['dark_text']); ?>;
+        }
+    </style>
 </head>
 <body class="app-body d-flex flex-column min-vh-100">
 <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
@@ -41,6 +86,16 @@ $theme = current_theme();
                     </a>
                 </li>
                 <?php if ($isLogged): ?>
+                    <li class="nav-item">
+                        <a class="nav-link position-relative" href="notifications.php">
+                            <i class="bi bi-bell"></i>
+                            <?php if ($notifCount > 0): ?>
+                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                                    <?php echo e((string) $notifCount); ?>
+                                </span>
+                            <?php endif; ?>
+                        </a>
+                    </li>
                     <li class="nav-item d-flex align-items-center me-2">
                         <span class="<?php echo e(role_badge_class($role)); ?>"><?php echo e(role_label($role)); ?></span>
                     </li>

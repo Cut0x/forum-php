@@ -1,25 +1,10 @@
 <?php
 require __DIR__ . '/includes/bootstrap.php';
 require __DIR__ . '/includes/header.php';
+require_db();
 
-$categories = [];
-$topics = [];
-
-if ($pdo) {
-    $categories = $pdo->query('SELECT id, name, description FROM categories ORDER BY sort_order, name')->fetchAll();
-    $topics = $pdo->query('SELECT t.id, t.title, t.created_at, c.name AS category_name FROM topics t JOIN categories c ON c.id = t.category_id ORDER BY t.created_at DESC LIMIT 5')->fetchAll();
-} else {
-    $categories = [
-        ['id' => 1, 'name' => 'Annonces', 'description' => 'Nouveautes et mises a jour.'],
-        ['id' => 2, 'name' => 'Support', 'description' => 'Questions et aide technique.'],
-        ['id' => 3, 'name' => 'Discussions', 'description' => 'Sujets libres.'],
-    ];
-
-    $topics = [
-        ['id' => 1, 'title' => 'Bienvenue sur le forum', 'created_at' => '2026-02-05 10:15:00', 'category_name' => 'Annonces'],
-        ['id' => 2, 'title' => 'Comment configurer le projet ?', 'created_at' => '2026-02-04 18:30:00', 'category_name' => 'Support'],
-    ];
-}
+$categories = $pdo->query('SELECT id, name, description FROM categories ORDER BY sort_order, name')->fetchAll();
+$topics = $pdo->query('SELECT t.id, t.title, t.created_at, c.name AS category_name FROM topics t JOIN categories c ON c.id = t.category_id WHERE t.deleted_at IS NULL ORDER BY t.created_at DESC LIMIT 5')->fetchAll();
 ?>
 <section class="bg-white p-4 rounded shadow-sm mb-4">
     <div class="d-flex flex-column flex-md-row justify-content-between gap-3">

@@ -40,34 +40,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $pdo && $canEdit) {
             }
             $target = $targetDir . '/' . $filename;
 
-            $source = null;
-            if ($mime === 'image/jpeg') {
-                $source = imagecreatefromjpeg($file['tmp_name']);
-            } elseif ($mime === 'image/png') {
-                $source = imagecreatefrompng($file['tmp_name']);
-            }
-
-            if ($source) {
-                $width = imagesx($source);
-                $height = imagesy($source);
-                $size = min($width, $height);
-                $x = (int) (($width - $size) / 2);
-                $y = (int) (($height - $size) / 2);
-
-                $canvas = imagecreatetruecolor(256, 256);
-                imagecopyresampled($canvas, $source, 0, 0, $x, $y, 256, 256, $size, $size);
-
+            if (function_exists('imagecreatefromjpeg') && function_exists('imagecreatetruecolor')) {
+                $source = null;
                 if ($mime === 'image/jpeg') {
-                    imagejpeg($canvas, $target, 90);
-                } else {
-                    imagepng($canvas, $target);
+                    $source = imagecreatefromjpeg($file['tmp_name']);
+                } elseif ($mime === 'image/png') {
+                    $source = imagecreatefrompng($file['tmp_name']);
                 }
 
-                imagedestroy($canvas);
-                imagedestroy($source);
-                $avatarPath = 'uploads/avatars/' . $filename;
+                if ($source) {
+                    $width = imagesx($source);
+                    $height = imagesy($source);
+                    $size = min($width, $height);
+                    $x = (int) (($width - $size) / 2);
+                    $y = (int) (($height - $size) / 2);
+
+                    $canvas = imagecreatetruecolor(256, 256);
+                    imagecopyresampled($canvas, $source, 0, 0, $x, $y, 256, 256, $size, $size);
+
+                    if ($mime === 'image/jpeg') {
+                        imagejpeg($canvas, $target, 90);
+                    } else {
+                        imagepng($canvas, $target);
+                    }
+
+                    imagedestroy($canvas);
+                    imagedestroy($source);
+                    $avatarPath = 'uploads/avatars/' . $filename;
+                } else {
+                    $error = 'Avatar invalide.';
+                }
             } else {
-                $error = 'Avatar invalide.';
+                if (move_uploaded_file($file['tmp_name'], $target)) {
+                    $avatarPath = 'uploads/avatars/' . $filename;
+                } else {
+                    $error = 'Avatar invalide.';
+                }
             }
         } else {
             $error = 'Avatar invalide.';
@@ -98,6 +106,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $pdo && $canEdit) {
 }
 
 require __DIR__ . '/includes/header.php';
+require_db();
 
 $user = null;
 $badges = [];
@@ -109,6 +118,8 @@ $stats = [
 ];
 $recentTopics = [];
 $recentPosts = [];
+$stripeEnabled = false;
+$stripeUrl = '';
 
 if ($pdo && $userId) {
     $stmt = $pdo->prepare('SELECT id, username, bio, avatar, role FROM users WHERE id = ?');
@@ -140,6 +151,9 @@ if ($pdo && $userId) {
     $stmt = $pdo->prepare('SELECT p.id, p.created_at, p.topic_id, t.title AS topic_title FROM posts p JOIN topics t ON t.id = p.topic_id WHERE p.user_id = ? ORDER BY p.created_at DESC LIMIT 3');
     $stmt->execute([$userId]);
     $recentPosts = $stmt->fetchAll();
+
+    $stripeEnabled = get_setting($pdo, 'stripe_enabled', '0') === '1';
+    $stripeUrl = get_setting($pdo, 'stripe_url', '') ?? '';
 }
 
 if (!$user) {
@@ -168,6 +182,8 @@ if (!$user) {
     $recentPosts = [
         ['id' => 1, 'created_at' => '2026-02-05 10:20:00', 'topic_id' => 1, 'topic_title' => 'Bienvenue sur le forum'],
     ];
+    $stripeEnabled = false;
+    $stripeUrl = '';
 }
 
 $avatar = $user['avatar'] ?: 'assets/default_user.jpg';
@@ -191,6 +207,12 @@ $avatar = $user['avatar'] ?: 'assets/default_user.jpg';
                         <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#editProfile">
                             <i class="bi bi-pencil-square me-1"></i>Editer
                         </button>
+                    </div>
+                <?php elseif ($stripeEnabled && $stripeUrl): ?>
+                    <div class="d-flex gap-2">
+                        <a class="btn btn-primary" href="<?php echo e($stripeUrl); ?>" target="_blank" rel="noopener">
+                            <i class="bi bi-heart-fill me-1"></i>Supporter
+                        </a>
                     </div>
                 <?php endif; ?>
             </div>

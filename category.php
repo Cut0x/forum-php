@@ -6,25 +6,21 @@ $categoryId = (int)($_GET['id'] ?? 0);
 $category = null;
 $topics = [];
 
-if ($pdo && $categoryId) {
+require_db();
+if ($categoryId) {
     $stmt = $pdo->prepare('SELECT id, name, description FROM categories WHERE id = ?');
     $stmt->execute([$categoryId]);
     $category = $stmt->fetch();
 
-    $stmt = $pdo->prepare('SELECT id, title, created_at FROM topics WHERE category_id = ? ORDER BY created_at DESC');
+    $stmt = $pdo->prepare('SELECT id, title, created_at FROM topics WHERE category_id = ? AND deleted_at IS NULL ORDER BY created_at DESC');
     $stmt->execute([$categoryId]);
     $topics = $stmt->fetchAll();
 }
 
 if (!$category) {
-    $category = [
-        'name' => 'Annonces',
-        'description' => 'Nouveautes et mises a jour.',
-    ];
-    $topics = [
-        ['id' => 1, 'title' => 'Bienvenue sur le forum', 'created_at' => '2026-02-05 10:15:00'],
-        ['id' => 2, 'title' => 'Roadmap 2026', 'created_at' => '2026-02-03 14:45:00'],
-    ];
+    echo '<div class="alert alert-danger">Categorie introuvable.</div>';
+    require __DIR__ . '/includes/footer.php';
+    exit;
 }
 ?>
 <section class="mb-4">

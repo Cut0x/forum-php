@@ -13,4 +13,8 @@ if ($content === '') {
 }
 
 header('Content-Type: text/html; charset=UTF-8');
-echo render_markdown($content);
+if ($pdo) {
+    echo render_markdown_with_mentions($pdo, $content);
+} else {
+    echo render_markdown($content);
+}

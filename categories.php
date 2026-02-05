@@ -2,17 +2,8 @@
 require __DIR__ . '/includes/bootstrap.php';
 require __DIR__ . '/includes/header.php';
 
-$categories = [];
-
-if ($pdo) {
-    $categories = $pdo->query('SELECT id, name, description FROM categories ORDER BY sort_order, name')->fetchAll();
-} else {
-    $categories = [
-        ['id' => 1, 'name' => 'Annonces', 'description' => 'Nouveautes et mises a jour.'],
-        ['id' => 2, 'name' => 'Support', 'description' => 'Questions et aide technique.'],
-        ['id' => 3, 'name' => 'Discussions', 'description' => 'Sujets libres.'],
-    ];
-}
+require_db();
+$categories = $pdo->query('SELECT id, name, description FROM categories ORDER BY sort_order, name')->fetchAll();
 ?>
 <h1 class="h4 mb-3">Toutes les categories</h1>
 <div class="row g-3">

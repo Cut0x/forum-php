@@ -24,6 +24,9 @@ CREATE TABLE topics (
     category_id INT NOT NULL,
     user_id INT NOT NULL,
     title VARCHAR(180) NOT NULL,
+    edited_at DATETIME NULL,
+    locked_at DATETIME NULL,
+    deleted_at DATETIME NULL,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE CASCADE,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
@@ -35,6 +38,7 @@ CREATE TABLE posts (
     user_id INT NOT NULL,
     content TEXT NOT NULL,
     edited_at DATETIME NULL,
+    deleted_at DATETIME NULL,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (topic_id) REFERENCES topics(id) ON DELETE CASCADE,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
@@ -65,6 +69,23 @@ CREATE TABLE post_votes (
     FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE
 );
 
+CREATE TABLE settings (
+    `key` VARCHAR(80) PRIMARY KEY,
+    value TEXT NOT NULL
+);
+
+CREATE TABLE notifications (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    type VARCHAR(30) NOT NULL,
+    message VARCHAR(255) NOT NULL,
+    topic_id INT NULL,
+    post_id INT NULL,
+    is_read TINYINT NOT NULL DEFAULT 0,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
 CREATE TABLE user_links (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
@@ -73,19 +94,17 @@ CREATE TABLE user_links (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
-INSERT INTO categories (name, description, sort_order) VALUES
-('Annonces', 'Nouveautes et mises a jour.', 1),
-('Support', 'Questions et aide technique.', 2),
-('Discussions', 'Sujets libres.', 3);
+CREATE TABLE footer_categories (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(80) NOT NULL,
+    sort_order INT NOT NULL DEFAULT 0
+);
 
-INSERT INTO badges (name, code, icon, color) VALUES
-('Premier message', 'starter', 'assets/badges/starter.png', '#4f8cff'),
-('10 messages', 'writer', 'assets/badges/writer.png', '#00d1b2'),
-('25 messages', 'speaker', 'assets/badges/speaker.png', '#ffb020'),
-('50 messages', 'veteran', 'assets/badges/veteran.png', '#7c5cff'),
-('Premier sujet', 'first_topic', 'assets/badges/founder.png', '#ff4d4f'),
-('10 sujets', 'topics_10', 'assets/badges/founder.png', '#ff4d4f');
-
-INSERT INTO topics (category_id, user_id, title) VALUES
-(1, 1, 'Bienvenue sur le forum'),
-(2, 1, 'Comment configurer le projet ?');
+CREATE TABLE footer_links (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    category_id INT NOT NULL,
+    label VARCHAR(80) NOT NULL,
+    url VARCHAR(255) NOT NULL,
+    sort_order INT NOT NULL DEFAULT 0,
+    FOREIGN KEY (category_id) REFERENCES footer_categories(id) ON DELETE CASCADE
+);

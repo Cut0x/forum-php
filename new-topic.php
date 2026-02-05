@@ -7,18 +7,13 @@ if (!is_logged_in()) {
 }
 
 $categories = [];
-if ($pdo) {
-    $categories = $pdo->query('SELECT id, name FROM categories ORDER BY sort_order, name')->fetchAll();
-} else {
-    $categories = [
-        ['id' => 1, 'name' => 'Annonces'],
-        ['id' => 2, 'name' => 'Support'],
-    ];
-}
+require __DIR__ . '/includes/header.php';
+require_db();
+$categories = $pdo->query('SELECT id, name FROM categories ORDER BY sort_order, name')->fetchAll();
 
 $error = '';
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && $pdo) {
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $title = trim($_POST['title'] ?? '');
     $content = trim($_POST['content'] ?? '');
     $categoryId = (int) ($_POST['category_id'] ?? 0);
@@ -30,7 +25,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $pdo) {
 
         $stmt = $pdo->prepare('INSERT INTO posts (topic_id, user_id, content) VALUES (?, ?, ?)');
         $stmt->execute([$topicId, current_user_id(), $content]);
+        $postId = (int) $pdo->lastInsertId();
         award_badges($pdo, current_user_id());
+
+        foreach (parse_mentions($content) as $mention) {
+            $stmt = $pdo->prepare('SELECT id FROM users WHERE username = ?');
+            $stmt->execute([$mention]);
+            $mentionId = (int) $stmt->fetchColumn();
+            if ($mentionId && $mentionId !== current_user_id()) {
+                create_notification($pdo, $mentionId, 'mention', 'Vous avez ete mentionne', $topicId, $postId);
+            }
+        }
 
         header('Location: topic.php?id=' . $topicId);
         exit;
@@ -38,8 +43,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $pdo) {
 
     $error = 'Champs manquants.';
 }
-
-require __DIR__ . '/includes/header.php';
 ?>
 <div class="row justify-content-center">
     <div class="col-lg-9">
@@ -65,7 +68,7 @@ require __DIR__ . '/includes/header.php';
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Message (Markdown)</label>
-                        <textarea class="form-control" id="markdown" name="content" rows="6" placeholder="Votre message..."></textarea>
+                    <textarea class="form-control" id="markdown" name="content" rows="6" placeholder="Votre message..." data-mentions="1"></textarea>
                     </div>
                     <div class="preview-box mb-3" id="preview">Apercu...</div>
                     <button class="btn btn-primary" type="submit">Publier</button>
