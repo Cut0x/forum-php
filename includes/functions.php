@@ -146,7 +146,7 @@ function apply_emotes_to_html(PDO $pdo, string $html): string
 
     $doc = new DOMDocument('1.0', 'UTF-8');
     $prev = libxml_use_internal_errors(true);
-    $wrapped = '<div>' . $html . '</div>';
+    $wrapped = '<?xml encoding="UTF-8" ?><div>' . $html . '</div>';
     $doc->loadHTML($wrapped, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
     libxml_use_internal_errors($prev);
 
@@ -202,13 +202,10 @@ function apply_emotes_to_html(PDO $pdo, string $html): string
     }
 
     $root = $doc->documentElement;
-    $output = '';
     if ($root) {
-        foreach ($root->childNodes as $child) {
-            $output .= $doc->saveHTML($child);
-        }
+        return $doc->saveHTML($root);
     }
-    return $output;
+    return $html;
 }
 
 function render_markdown_with_emotes(PDO $pdo, string $text): string
