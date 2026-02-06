@@ -275,6 +275,16 @@ function create_notification(PDO $pdo, int $userId, string $type, string $messag
     }
 }
 
+function notification_label(string $type): string
+{
+    return match ($type) {
+        'reply' => 'Réponses',
+        'mention' => 'Mentions',
+        'vote' => 'Votes',
+        default => 'Autres',
+    };
+}
+
 function parse_mentions(string $content): array
 {
     preg_match_all('/@([a-zA-Z0-9_]{3,30})/', $content, $matches);
