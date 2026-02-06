@@ -39,7 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->execute([$mention]);
             $mentionId = (int) $stmt->fetchColumn();
             if ($mentionId && $mentionId !== current_user_id()) {
-                create_notification($pdo, $mentionId, 'mention', 'Vous avez été mentionné', $topicId, $postId);
+                create_notification($pdo, $mentionId, 'mention', 'Vous avez été mentionné', $topicId, $postId, current_user_id());
             }
         }
 

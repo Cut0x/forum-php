@@ -64,13 +64,17 @@ $total = (int) $stmt->fetchColumn();
 $totalPages = max(1, (int) ceil($total / $perPage));
 
 if ($type === 'all') {
-    $stmt = $pdo->prepare('SELECT id, type, message, topic_id, post_id, is_read, created_at FROM notifications WHERE user_id = ? ORDER BY created_at DESC LIMIT ? OFFSET ?');
+    $stmt = $pdo->prepare('SELECT n.id, n.type, n.message, n.topic_id, n.post_id, n.is_read, n.created_at, u.id AS actor_id, u.username AS actor_name
+        FROM notifications n LEFT JOIN users u ON u.id = n.actor_id
+        WHERE n.user_id = ? ORDER BY n.created_at DESC LIMIT ? OFFSET ?');
     $stmt->bindValue(1, current_user_id(), PDO::PARAM_INT);
     $stmt->bindValue(2, $perPage, PDO::PARAM_INT);
     $stmt->bindValue(3, $offset, PDO::PARAM_INT);
     $stmt->execute();
 } else {
-    $stmt = $pdo->prepare('SELECT id, type, message, topic_id, post_id, is_read, created_at FROM notifications WHERE user_id = ? AND type = ? ORDER BY created_at DESC LIMIT ? OFFSET ?');
+    $stmt = $pdo->prepare('SELECT n.id, n.type, n.message, n.topic_id, n.post_id, n.is_read, n.created_at, u.id AS actor_id, u.username AS actor_name
+        FROM notifications n LEFT JOIN users u ON u.id = n.actor_id
+        WHERE n.user_id = ? AND n.type = ? ORDER BY n.created_at DESC LIMIT ? OFFSET ?');
     $stmt->bindValue(1, current_user_id(), PDO::PARAM_INT);
     $stmt->bindValue(2, $type, PDO::PARAM_STR);
     $stmt->bindValue(3, $perPage, PDO::PARAM_INT);
@@ -117,6 +121,11 @@ foreach ($stmt->fetchAll() as $row) {
                     <div>
                         <div class="fw-semibold"><?php echo e(notification_label($notif['type'])); ?></div>
                         <a class="text-decoration-none" href="<?php echo e($link); ?>"><?php echo e($notif['message']); ?></a>
+                        <?php if (!empty($notif['actor_id'])): ?>
+                            <div class="small">
+                                Par <a class="text-decoration-none" href="profile.php?id=<?php echo e((string) $notif['actor_id']); ?>">@<?php echo e($notif['actor_name']); ?></a>
+                            </div>
+                        <?php endif; ?>
                         <div class="text-muted small"><?php echo e(format_date($notif['created_at'])); ?></div>
                     </div>
                     <div class="d-flex flex-column align-items-end gap-2">
