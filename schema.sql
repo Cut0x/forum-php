@@ -17,7 +17,8 @@ CREATE TABLE categories (
     name VARCHAR(80) NOT NULL,
     description VARCHAR(255) NOT NULL,
     sort_order INT NOT NULL DEFAULT 0,
-    is_readonly TINYINT NOT NULL DEFAULT 0
+    is_readonly TINYINT NOT NULL DEFAULT 0,
+    is_pinned TINYINT NOT NULL DEFAULT 0
 );
 
 CREATE TABLE topics (

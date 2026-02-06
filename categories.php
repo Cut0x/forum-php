@@ -3,7 +3,7 @@ require __DIR__ . '/includes/bootstrap.php';
 require __DIR__ . '/includes/header.php';
 
 require_db();
-$categories = $pdo->query('SELECT id, name, description FROM categories ORDER BY sort_order, name')->fetchAll();
+$categories = $pdo->query('SELECT id, name, description, is_pinned FROM categories ORDER BY is_pinned DESC, sort_order, name')->fetchAll();
 ?>
 <h1 class="h4 mb-3">Toutes les catégories</h1>
 <div class="row g-3">

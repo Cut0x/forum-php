@@ -3,7 +3,7 @@ require __DIR__ . '/includes/bootstrap.php';
 require __DIR__ . '/includes/header.php';
 require_db();
 
-$categories = $pdo->query('SELECT id, name, description FROM categories ORDER BY sort_order, name')->fetchAll();
+$categories = $pdo->query('SELECT id, name, description, is_pinned FROM categories ORDER BY is_pinned DESC, sort_order, name')->fetchAll();
 $topics = $pdo->query('SELECT t.id, t.title, t.created_at, c.name AS category_name FROM topics t JOIN categories c ON c.id = t.category_id WHERE t.deleted_at IS NULL ORDER BY t.created_at DESC LIMIT 5')->fetchAll();
 ?>
 <section class="bg-white p-4 rounded shadow-sm mb-4">
