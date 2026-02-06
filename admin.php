@@ -81,6 +81,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->execute([$id]);
     }
 
+    if ($action === 'category_add') {
+        $name = trim($_POST['name'] ?? '');
+        $description = trim($_POST['description'] ?? '');
+        $readonly = isset($_POST['is_readonly']) ? 1 : 0;
+        if ($name && $description) {
+            $stmt = $pdo->prepare('INSERT INTO categories (name, description, sort_order, is_readonly) VALUES (?, ?, ?, ?)');
+            $stmt->execute([$name, $description, 0, $readonly]);
+            $message = 'Catégorie créée.';
+        }
+    }
+
+    if ($action === 'category_edit') {
+        $id = (int) ($_POST['id'] ?? 0);
+        $name = trim($_POST['name'] ?? '');
+        $description = trim($_POST['description'] ?? '');
+        $readonly = isset($_POST['is_readonly']) ? 1 : 0;
+        if ($id && $name && $description) {
+            $stmt = $pdo->prepare('UPDATE categories SET name = ?, description = ?, is_readonly = ? WHERE id = ?');
+            $stmt->execute([$name, $description, $readonly, $id]);
+            $message = 'Catégorie mise à jour.';
+        }
+    }
+
+    if ($action === 'category_delete') {
+        $id = (int) ($_POST['id'] ?? 0);
+        if ($id) {
+            $stmt = $pdo->prepare('DELETE FROM categories WHERE id = ?');
+            $stmt->execute([$id]);
+            $message = 'Catégorie supprimée.';
+        }
+    }
+
     if ($action === 'settings') {
         set_setting($pdo, 'site_title', trim($_POST['site_title'] ?? 'Forum PHP'));
         set_setting($pdo, 'site_description', trim($_POST['site_description'] ?? 'Forum communautaire.'));
@@ -140,6 +172,7 @@ $stripeEnabled = get_setting($pdo, 'stripe_enabled', '0');
 $stripeUrl = get_setting($pdo, 'stripe_url', '');
 $footerCategories = $pdo->query('SELECT id, name FROM footer_categories ORDER BY sort_order, name')->fetchAll();
 $footerLinks = $pdo->query('SELECT id, category_id, label, url FROM footer_links ORDER BY sort_order, label')->fetchAll();
+$categories = $pdo->query('SELECT id, name, description, is_readonly FROM categories ORDER BY sort_order, name')->fetchAll();
 $theme = [
     'theme_light_bg' => get_setting($pdo, 'theme_light_bg', '#f1f5f9'),
     'theme_light_surface' => get_setting($pdo, 'theme_light_surface', '#ffffff'),
@@ -163,6 +196,7 @@ $theme = [
             <nav class="nav flex-column admin-nav">
                 <a class="nav-link" href="#section-theme">Thème</a>
                 <a class="nav-link" href="#section-settings">Paramètres</a>
+                <a class="nav-link" href="#section-categories">Catégories</a>
                 <a class="nav-link" href="#section-footer">Footer</a>
                 <a class="nav-link" href="#section-badges">Badges</a>
                 <a class="nav-link" href="#section-users">Utilisateurs</a>
@@ -275,6 +309,79 @@ $theme = [
                     </div>
                     <button class="btn btn-primary mt-3" type="submit">Enregistrer</button>
                 </form>
+            </div>
+        </section>
+
+        <section id="section-categories" class="card admin-card shadow-sm mb-4">
+            <div class="card-header bg-white">Catégories</div>
+            <div class="card-body">
+                <form method="post" class="mb-4">
+                    <input type="hidden" name="action" value="category_add">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Nom</label>
+                            <input class="form-control" name="name" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Description</label>
+                            <input class="form-control" name="description" required>
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="is_readonly" id="is_readonly">
+                                <label class="form-check-label" for="is_readonly">Lecture seule</label>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary mt-3" type="submit">Créer</button>
+                </form>
+
+                <div class="row g-3">
+                    <?php foreach ($categories as $cat): ?>
+                        <div class="col-md-6">
+                            <div class="border rounded p-3">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <div class="fw-semibold"><?php echo e($cat['name']); ?></div>
+                                        <div class="text-muted small"><?php echo e($cat['description']); ?></div>
+                                        <?php if (!empty($cat['is_readonly'])): ?>
+                                            <span class="badge bg-secondary mt-2">Lecture seule</span>
+                                        <?php endif; ?>
+                                    </div>
+                                    <div class="d-flex gap-2">
+                                        <button class="btn btn-sm btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#edit-cat-<?php echo e((string) $cat['id']); ?>">Éditer</button>
+                                        <form method="post">
+                                            <input type="hidden" name="action" value="category_delete">
+                                            <input type="hidden" name="id" value="<?php echo e((string) $cat['id']); ?>">
+                                            <button class="btn btn-sm btn-outline-danger" type="submit">Supprimer</button>
+                                        </form>
+                                    </div>
+                                </div>
+                                <div class="collapse mt-3" id="edit-cat-<?php echo e((string) $cat['id']); ?>">
+                                    <form method="post">
+                                        <input type="hidden" name="action" value="category_edit">
+                                        <input type="hidden" name="id" value="<?php echo e((string) $cat['id']); ?>">
+                                        <div class="row g-2">
+                                            <div class="col-md-5">
+                                                <input class="form-control" name="name" value="<?php echo e($cat['name']); ?>">
+                                            </div>
+                                            <div class="col-md-5">
+                                                <input class="form-control" name="description" value="<?php echo e($cat['description']); ?>">
+                                            </div>
+                                            <div class="col-md-2 d-flex align-items-center">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" name="is_readonly" id="readonly-<?php echo e((string) $cat['id']); ?>" <?php echo !empty($cat['is_readonly']) ? 'checked' : ''; ?>>
+                                                    <label class="form-check-label" for="readonly-<?php echo e((string) $cat['id']); ?>">Lecture seule</label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <button class="btn btn-primary btn-sm mt-2" type="submit">Enregistrer</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
             </div>
         </section>
 
