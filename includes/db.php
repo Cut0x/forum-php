@@ -14,7 +14,9 @@ if (ensure_config()) {
         $pdo = new PDO($dsn, $config['db']['user'], $config['db']['pass'], [
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+            PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8mb4',
         ]);
+        $pdo->exec('SET NAMES utf8mb4');
     } catch (Throwable $e) {
         $pdo = null;
         $dbError = $e->getMessage();

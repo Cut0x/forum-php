@@ -3,6 +3,7 @@ $appName = $config['app']['name'] ?? 'Forum PHP';
 $baseUrl = $config['app']['base_url'] ?? '';
 $isLogged = is_logged_in();
 $username = current_username();
+$displayName = current_user_name() ?? $username;
 $role = current_user_role();
 $theme = current_theme();
 $notifCount = 0;
@@ -115,7 +116,7 @@ $canonical = $baseUrl ?: '';
                     <li class="nav-item d-flex align-items-center me-2">
                         <span class="<?php echo e(role_badge_class($role)); ?>"><?php echo e(role_label($role)); ?></span>
                     </li>
-                    <li class="nav-item"><a class="nav-link" href="profile.php"><i class="bi bi-person-circle me-1"></i><?php echo e($username ?? 'Profil'); ?></a></li>
+                    <li class="nav-item"><a class="nav-link" href="profile.php"><i class="bi bi-person-circle me-1"></i><?php echo e($displayName ?? 'Profil'); ?></a></li>
                     <?php if (is_admin()): ?>
                         <li class="nav-item"><a class="nav-link" href="admin.php"><i class="bi bi-shield-lock me-1"></i>Admin</a></li>
                     <?php endif; ?>

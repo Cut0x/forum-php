@@ -130,11 +130,11 @@ $topic = null;
 $posts = [];
 
 if ($topicId) {
-    $stmt = $pdo->prepare('SELECT t.id, t.title, t.created_at, t.edited_at, t.locked_at, t.deleted_at, c.is_readonly, u.username, u.role, u.id AS user_id FROM topics t JOIN users u ON u.id = t.user_id JOIN categories c ON c.id = t.category_id WHERE t.id = ?');
+    $stmt = $pdo->prepare('SELECT t.id, t.title, t.created_at, t.edited_at, t.locked_at, t.deleted_at, c.is_readonly, u.name, u.username, u.role, u.id AS user_id FROM topics t JOIN users u ON u.id = t.user_id JOIN categories c ON c.id = t.category_id WHERE t.id = ?');
     $stmt->execute([$topicId]);
     $topic = $stmt->fetch();
 
-    $stmt = $pdo->prepare('SELECT p.id, p.content, p.created_at, p.edited_at, p.deleted_at, u.username, u.avatar, u.role, u.id AS user_id,
+    $stmt = $pdo->prepare('SELECT p.id, p.content, p.created_at, p.edited_at, p.deleted_at, u.name, u.username, u.avatar, u.role, u.id AS user_id,
         COALESCE((SELECT SUM(value) FROM post_votes v WHERE v.post_id = p.id), 0) AS score,
         (SELECT value FROM post_votes v WHERE v.post_id = p.id AND v.user_id = ?) AS user_vote
         FROM posts p JOIN users u ON u.id = p.user_id WHERE p.topic_id = ? ORDER BY p.created_at');
@@ -151,7 +151,8 @@ if (!$topic) {
 <section class="mb-4">
     <h1 class="h4 mb-1"><?php echo e($topic['title']); ?></h1>
     <p class="text-muted">
-        Par <a class="text-decoration-none" href="profile.php?id=<?php echo e((string) $topic['user_id']); ?>"><?php echo e($topic['username']); ?></a>
+        Par <a class="text-decoration-none" href="profile.php?id=<?php echo e((string) $topic['user_id']); ?>"><?php echo e($topic['name'] ?: $topic['username']); ?></a>
+        <span class="text-muted">@<?php echo e($topic['username']); ?></span>
         <span class="<?php echo e(role_badge_class($topic['role'] ?? null)); ?>"><?php echo e(role_label($topic['role'] ?? null)); ?></span>
         · <?php echo e(format_date($topic['created_at'])); ?>
         <?php if (!empty($topic['edited_at'])): ?>
@@ -195,7 +196,8 @@ if (!$topic) {
                     <div class="flex-grow-1">
                         <div class="post-meta">
                             <a class="fw-semibold text-decoration-none" href="profile.php?id=<?php echo e((string) $post['user_id']); ?>">
-                                <?php echo e($post['username']); ?>
+                                <?php echo e($post['name'] ?: $post['username']); ?>
+                                <span class="text-muted">@<?php echo e($post['username']); ?></span>
                             </a>
                             <span class="<?php echo e(role_badge_class($post['role'] ?? null)); ?>"><?php echo e(role_label($post['role'] ?? null)); ?></span>
                         </div>

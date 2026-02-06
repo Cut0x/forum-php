@@ -13,13 +13,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $pdo) {
     $password = $_POST['password'] ?? '';
 
     if ($email && $password) {
-        $stmt = $pdo->prepare('SELECT id, username, password_hash, role FROM users WHERE email = ?');
+        $stmt = $pdo->prepare('SELECT id, username, name, password_hash, role FROM users WHERE email = ?');
         $stmt->execute([$email]);
         $user = $stmt->fetch();
 
         if ($user && password_verify($password, $user['password_hash'])) {
             $_SESSION['user_id'] = (int) $user['id'];
             $_SESSION['username'] = $user['username'];
+            $_SESSION['name'] = $user['name'] ?? $user['username'];
             $_SESSION['role'] = $user['role'];
             header('Location: profile.php');
             exit;

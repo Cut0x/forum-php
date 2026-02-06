@@ -4,6 +4,41 @@ function e(?string $value): string
     return htmlspecialchars($value ?? '', ENT_QUOTES, 'UTF-8');
 }
 
+function normalize_username(string $value): string
+{
+    $value = trim($value);
+    if ($value === '') {
+        return '';
+    }
+
+    $lower = function_exists('mb_strtolower') ? mb_strtolower($value, 'UTF-8') : strtolower($value);
+    $ascii = $lower;
+    if (function_exists('iconv')) {
+        $conv = @iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $lower);
+        if ($conv !== false) {
+            $ascii = $conv;
+        }
+    }
+
+    $ascii = strtr($ascii, [
+        'à' => 'a', 'á' => 'a', 'â' => 'a', 'ã' => 'a', 'ä' => 'a', 'å' => 'a',
+        'ç' => 'c',
+        'è' => 'e', 'é' => 'e', 'ê' => 'e', 'ë' => 'e',
+        'ì' => 'i', 'í' => 'i', 'î' => 'i', 'ï' => 'i',
+        'ñ' => 'n',
+        'ò' => 'o', 'ó' => 'o', 'ô' => 'o', 'õ' => 'o', 'ö' => 'o',
+        'ù' => 'u', 'ú' => 'u', 'û' => 'u', 'ü' => 'u',
+        'ý' => 'y', 'ÿ' => 'y',
+        'œ' => 'oe', 'æ' => 'ae',
+    ]);
+
+    $ascii = preg_replace('/[^a-z0-9_]+/', '_', $ascii);
+    $ascii = trim($ascii, '_');
+    $ascii = preg_replace('/_+/', '_', $ascii);
+
+    return $ascii;
+}
+
 function format_date(?string $date): string
 {
     if (!$date) {
@@ -27,6 +62,11 @@ function current_user_id(): ?int
 function current_username(): ?string
 {
     return $_SESSION['username'] ?? null;
+}
+
+function current_user_name(): ?string
+{
+    return $_SESSION['name'] ?? null;
 }
 
 function current_user_role(): ?string
@@ -181,7 +221,15 @@ function render_markdown_with_mentions(PDO $pdo, string $text): string
 {
     $html = render_markdown_with_emotes($pdo, $text);
     preg_match_all('/@([a-zA-Z0-9_]{3,30})/', $text, $matches);
-    $usernames = array_unique($matches[1] ?? []);
+    $rawUsernames = array_unique($matches[1] ?? []);
+    $usernames = [];
+    foreach ($rawUsernames as $name) {
+        $norm = normalize_username($name);
+        if ($norm !== '' && strlen($norm) >= 3 && strlen($norm) <= 30) {
+            $usernames[] = $norm;
+        }
+    }
+    $usernames = array_values(array_unique($usernames));
     if (!$usernames) {
         return $html;
     }
@@ -196,10 +244,11 @@ function render_markdown_with_mentions(PDO $pdo, string $text): string
 
     return preg_replace_callback('/@([a-zA-Z0-9_]{3,30})/', function ($m) use ($map) {
         $name = $m[1];
-        if (!isset($map[$name])) {
+        $norm = normalize_username($name);
+        if (!isset($map[$norm])) {
             return '@' . $name;
         }
-        $id = $map[$name];
+        $id = $map[$norm];
         return '<a href="profile.php?id=' . $id . '" class="text-decoration-none">@' . e($name) . '</a>';
     }, $html);
 }
@@ -419,7 +468,15 @@ function notification_label(string $type): string
 function parse_mentions(string $content): array
 {
     preg_match_all('/@([a-zA-Z0-9_]{3,30})/', $content, $matches);
-    return array_unique($matches[1] ?? []);
+    $raw = array_unique($matches[1] ?? []);
+    $names = [];
+    foreach ($raw as $name) {
+        $norm = normalize_username($name);
+        if ($norm !== '' && strlen($norm) >= 3 && strlen($norm) <= 30) {
+            $names[] = $norm;
+        }
+    }
+    return array_values(array_unique($names));
 }
 
 function award_badges(PDO $pdo, int $userId): void

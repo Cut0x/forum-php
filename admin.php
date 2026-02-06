@@ -296,7 +296,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-$users = $pdo->query('SELECT id, username, role FROM users ORDER BY username')->fetchAll();
+$users = $pdo->query('SELECT id, name, username, role FROM users ORDER BY name, username')->fetchAll();
 $badges = $pdo->query('SELECT id, name, code, icon, color FROM badges ORDER BY name')->fetchAll();
 $siteTitle = get_setting($pdo, 'site_title', 'Forum PHP');
 $siteDescription = get_setting($pdo, 'site_description', 'Forum communautaire.');
@@ -731,7 +731,8 @@ $theme = [
                 <?php foreach ($users as $user): ?>
                     <div class="border rounded p-3 mb-3">
                         <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
-                            <div class="fw-semibold"><?php echo e($user['username']); ?></div>
+                            <div class="fw-semibold"><?php echo e($user['name'] ?: $user['username']); ?></div>
+                            <small class="text-muted">@<?php echo e($user['username']); ?></small>
                             <form method="post" class="d-flex gap-2 align-items-center">
                                 <input type="hidden" name="action" value="role">
                                 <input type="hidden" name="user_id" value="<?php echo e((string) $user['id']); ?>">
