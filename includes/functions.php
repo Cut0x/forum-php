@@ -50,9 +50,136 @@ function render_markdown(string $text): string
     return $parser->text($text);
 }
 
-function render_markdown_with_mentions(PDO $pdo, string $text): string
+function get_emotes(PDO $pdo): array
+{
+    static $cache = null;
+    if ($cache !== null) {
+        return $cache;
+    }
+
+    try {
+        $stmt = $pdo->query('SELECT name, file, title FROM emotes WHERE is_enabled = 1 ORDER BY name');
+        $rows = $stmt->fetchAll();
+    } catch (Throwable $e) {
+        $cache = [];
+        return $cache;
+    }
+
+    $map = [];
+    foreach ($rows as $row) {
+        $name = trim((string) ($row['name'] ?? ''));
+        $file = trim((string) ($row['file'] ?? ''));
+        if ($name === '' || $file === '') {
+            continue;
+        }
+        $map[$name] = [
+            'file' => $file,
+            'title' => (string) ($row['title'] ?? ''),
+        ];
+    }
+    $cache = $map;
+    return $cache;
+}
+
+function node_is_in_tags(DOMNode $node, array $tags): bool
+{
+    $tags = array_map('strtolower', $tags);
+    $current = $node;
+    while ($current) {
+        if ($current->nodeType === XML_ELEMENT_NODE) {
+            $name = strtolower($current->nodeName);
+            if (in_array($name, $tags, true)) {
+                return true;
+            }
+        }
+        $current = $current->parentNode;
+    }
+    return false;
+}
+
+function apply_emotes_to_html(PDO $pdo, string $html): string
+{
+    $emotes = get_emotes($pdo);
+    if (!$emotes) {
+        return $html;
+    }
+
+    $doc = new DOMDocument('1.0', 'UTF-8');
+    $prev = libxml_use_internal_errors(true);
+    $wrapped = '<div>' . $html . '</div>';
+    $doc->loadHTML($wrapped, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+    libxml_use_internal_errors($prev);
+
+    $pattern = '/:([a-zA-Z0-9_+-]{2,50}):/';
+    $xpath = new DOMXPath($doc);
+    $textNodes = $xpath->query('//text()');
+    if (!$textNodes) {
+        return $html;
+    }
+
+    foreach ($textNodes as $textNode) {
+        if (node_is_in_tags($textNode, ['code', 'pre'])) {
+            continue;
+        }
+
+        $value = $textNode->nodeValue;
+        if (!preg_match($pattern, $value)) {
+            continue;
+        }
+
+        $parts = preg_split($pattern, $value, -1, PREG_SPLIT_DELIM_CAPTURE);
+        if ($parts === false || $parts === null) {
+            continue;
+        }
+
+        $fragment = $doc->createDocumentFragment();
+        foreach ($parts as $index => $part) {
+            if ($index % 2 === 0) {
+                if ($part !== '') {
+                    $fragment->appendChild($doc->createTextNode($part));
+                }
+                continue;
+            }
+
+            $name = $part;
+            if (!isset($emotes[$name])) {
+                $fragment->appendChild($doc->createTextNode(':' . $name . ':'));
+                continue;
+            }
+
+            $emote = $emotes[$name];
+            $img = $doc->createElement('img');
+            $img->setAttribute('src', 'assets/emotes/' . $emote['file']);
+            $img->setAttribute('alt', ':' . $name . ':');
+            $img->setAttribute('class', 'emote');
+            if (!empty($emote['title'])) {
+                $img->setAttribute('title', $emote['title']);
+            }
+            $fragment->appendChild($img);
+        }
+
+        $textNode->parentNode->replaceChild($fragment, $textNode);
+    }
+
+    $root = $doc->documentElement;
+    $output = '';
+    if ($root) {
+        foreach ($root->childNodes as $child) {
+            $output .= $doc->saveHTML($child);
+        }
+    }
+    return $output;
+}
+
+function render_markdown_with_emotes(PDO $pdo, string $text): string
 {
     $html = render_markdown($text);
+    return apply_emotes_to_html($pdo, $html);
+}
+
+function render_markdown_with_mentions(PDO $pdo, string $text): string
+{
+    $html = render_markdown_with_emotes($pdo, $text);
     preg_match_all('/@([a-zA-Z0-9_]{3,30})/', $text, $matches);
     $usernames = array_unique($matches[1] ?? []);
     if (!$usernames) {

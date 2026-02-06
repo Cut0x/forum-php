@@ -118,6 +118,95 @@ if ($pdo) {
     }
 
     document.querySelectorAll('[data-mentions="1"]').forEach(initMentions);
+
+    let emoteCache = null;
+    function fetchEmotes() {
+        if (emoteCache) {
+            return Promise.resolve(emoteCache);
+        }
+        return fetch('emotes.php')
+            .then(r => r.json())
+            .then(items => {
+                emoteCache = Array.isArray(items) ? items : [];
+                return emoteCache;
+            })
+            .catch(() => []);
+    }
+
+    function insertAtCursor(textarea, text) {
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const value = textarea.value;
+        textarea.value = value.slice(0, start) + text + value.slice(end);
+        textarea.selectionStart = textarea.selectionEnd = start + text.length;
+        textarea.focus();
+        textarea.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+
+    function initEmotes(textarea) {
+        const toolbar = document.createElement('div');
+        toolbar.className = 'emote-toolbar';
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'btn btn-sm btn-outline-secondary';
+        button.textContent = 'Émotes';
+        const panel = document.createElement('div');
+        panel.className = 'emote-panel d-none';
+        toolbar.appendChild(button);
+        toolbar.appendChild(panel);
+
+        textarea.parentNode.insertBefore(toolbar, textarea);
+
+        let opened = false;
+        function closePanel() {
+            panel.classList.add('d-none');
+            opened = false;
+        }
+
+        button.addEventListener('click', () => {
+            if (opened) {
+                closePanel();
+                return;
+            }
+            fetchEmotes().then(items => {
+                panel.innerHTML = '';
+                if (!items.length) {
+                    const empty = document.createElement('div');
+                    empty.className = 'text-muted small';
+                    empty.textContent = 'Aucune émote disponible.';
+                    panel.appendChild(empty);
+                } else {
+                    items.forEach(item => {
+                        const name = item.name || '';
+                        const file = item.file || '';
+                        if (!name || !file) {
+                            return;
+                        }
+                        const btn = document.createElement('button');
+                        btn.type = 'button';
+                        btn.className = 'emote-item';
+                        btn.title = ':' + name + ':';
+                        btn.setAttribute('aria-label', ':' + name + ':');
+                        btn.innerHTML = `<img class="emote" src="assets/emotes/${file}" alt=":${name}:">`;
+                        btn.addEventListener('click', () => {
+                            insertAtCursor(textarea, ':' + name + ': ');
+                        });
+                        panel.appendChild(btn);
+                    });
+                }
+                panel.classList.remove('d-none');
+                opened = true;
+            });
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!opened) return;
+            if (toolbar.contains(e.target)) return;
+            closePanel();
+        });
+    }
+
+    document.querySelectorAll('[data-emotes="1"]').forEach(initEmotes);
 </script>
 </body>
 </html>

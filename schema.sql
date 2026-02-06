@@ -112,3 +112,12 @@ CREATE TABLE footer_links (
     sort_order INT NOT NULL DEFAULT 0,
     FOREIGN KEY (category_id) REFERENCES footer_categories(id) ON DELETE CASCADE
 );
+
+CREATE TABLE emotes (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(50) NOT NULL UNIQUE,
+    file VARCHAR(255) NOT NULL,
+    title VARCHAR(80) NULL,
+    is_enabled TINYINT NOT NULL DEFAULT 1,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);

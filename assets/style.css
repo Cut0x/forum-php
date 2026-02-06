@@ -157,6 +157,49 @@ pre,
     padding: 4px;
 }
 
+.emote {
+    height: 1.15em;
+    width: auto;
+    vertical-align: -0.12em;
+    display: inline-block;
+    margin: 0 1px;
+}
+
+.emote-card.emote-disabled {
+    opacity: 0.55;
+    filter: grayscale(1);
+}
+
+.emote-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+}
+
+.emote-panel {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 8px;
+    border-radius: 10px;
+    background: var(--surface-2);
+    border: 1px solid rgba(148,163,184,0.3);
+}
+
+.emote-item {
+    border: 1px solid rgba(148,163,184,0.35);
+    background: var(--surface);
+    border-radius: 8px;
+    padding: 4px 6px;
+    cursor: pointer;
+}
+
+.emote-item:hover {
+    border-color: var(--brand);
+}
+
 .vote-pill {
     border: 1px solid rgba(148,163,184,0.35);
     border-radius: 999px;
