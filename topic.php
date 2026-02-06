@@ -4,6 +4,16 @@ require __DIR__ . '/includes/bootstrap.php';
 $topicId = (int)($_GET['id'] ?? 0);
 $message = '';
 
+$backUrl = $_SERVER['HTTP_REFERER'] ?? '';
+$safeBack = '';
+if ($backUrl) {
+    $parts = parse_url($backUrl);
+    $host = $parts['host'] ?? '';
+    if ($host === '' || $host === ($_SERVER['HTTP_HOST'] ?? '')) {
+        $safeBack = $backUrl;
+    }
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $pdo && is_logged_in()) {
     $action = $_POST['action'] ?? '';
 
@@ -149,6 +159,15 @@ if (!$topic) {
 }
 ?>
 <section class="mb-4">
+    <?php if ($safeBack): ?>
+        <a class="btn btn-sm btn-outline-secondary mb-2" href="<?php echo e($safeBack); ?>">
+            <i class="bi bi-arrow-left"></i> Retour
+        </a>
+    <?php else: ?>
+        <a class="btn btn-sm btn-outline-secondary mb-2" href="index.php">
+            <i class="bi bi-arrow-left"></i> Retour
+        </a>
+    <?php endif; ?>
     <h1 class="h4 mb-1"><?php echo e($topic['title']); ?></h1>
     <p class="text-muted">
         Par <a class="text-decoration-none" href="profile.php?id=<?php echo e((string) $topic['user_id']); ?>"><?php echo e($topic['name'] ?: $topic['username']); ?></a>
