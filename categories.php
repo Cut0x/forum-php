@@ -5,7 +5,7 @@ require __DIR__ . '/includes/header.php';
 require_db();
 $categories = $pdo->query('SELECT id, name, description FROM categories ORDER BY sort_order, name')->fetchAll();
 ?>
-<h1 class="h4 mb-3">Toutes les categories</h1>
+<h1 class="h4 mb-3">Toutes les catégories</h1>
 <div class="row g-3">
     <?php foreach ($categories as $category): ?>
         <div class="col-md-6">

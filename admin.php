@@ -20,7 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt = $pdo->prepare('UPDATE users SET role = ? WHERE id = ?');
         $stmt->execute([$role, $userId]);
         sync_role_badges($pdo, $userId, $role);
-        $message = 'Role mis a jour.';
+        $message = 'Rôle mis à jour.';
     }
 
     if ($action === 'badge') {
@@ -28,7 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $badgeId = (int) ($_POST['badge_id'] ?? 0);
         $stmt = $pdo->prepare('INSERT IGNORE INTO user_badges (user_id, badge_id) VALUES (?, ?)');
         $stmt->execute([$userId, $badgeId]);
-        $message = 'Badge ajoute.';
+        $message = 'Badge ajouté.';
     }
 
     if ($action === 'badge_remove') {
@@ -36,7 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $badgeId = (int) ($_POST['badge_id'] ?? 0);
         $stmt = $pdo->prepare('DELETE FROM user_badges WHERE user_id = ? AND badge_id = ?');
         $stmt->execute([$userId, $badgeId]);
-        $message = 'Badge retire.';
+        $message = 'Badge retiré.';
     }
 
     if ($action === 'badge_create') {
@@ -47,7 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($name && $code && $icon) {
             $stmt = $pdo->prepare('INSERT INTO badges (name, code, icon, color) VALUES (?, ?, ?, ?)');
             $stmt->execute([$name, $code, $icon, $color]);
-            $message = 'Badge cree.';
+            $message = 'Badge créé.';
         }
     }
 
@@ -88,7 +88,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         set_setting($pdo, 'footer_link', trim($_POST['footer_link'] ?? ''));
         set_setting($pdo, 'stripe_enabled', isset($_POST['stripe_enabled']) ? '1' : '0');
         set_setting($pdo, 'stripe_url', trim($_POST['stripe_url'] ?? ''));
-        $message = 'Parametres mis a jour.';
+        $message = 'Paramètres mis à jour.';
     }
 
     if ($action === 'theme') {
@@ -103,7 +103,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
         set_setting($pdo, 'theme_version', (string) time());
-        $message = 'Theme mis a jour.';
+        $message = 'Thème mis à jour.';
     }
 
     if ($action === 'theme_preset') {
@@ -126,7 +126,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
         set_setting($pdo, 'theme_version', (string) time());
-        $message = 'Theme reinitialise.';
+        $message = 'Thème réinitialisé.';
     }
 }
 
@@ -161,8 +161,8 @@ $theme = [
         <div class="card admin-card shadow-sm p-3">
             <div class="fw-semibold mb-2">Admin</div>
             <nav class="nav flex-column admin-nav">
-                <a class="nav-link" href="#section-theme">Theme</a>
-                <a class="nav-link" href="#section-settings">Parametres</a>
+                <a class="nav-link" href="#section-theme">Thème</a>
+                <a class="nav-link" href="#section-settings">Paramètres</a>
                 <a class="nav-link" href="#section-footer">Footer</a>
                 <a class="nav-link" href="#section-badges">Badges</a>
                 <a class="nav-link" href="#section-users">Utilisateurs</a>
@@ -174,7 +174,7 @@ $theme = [
     </aside>
     <div>
         <section id="section-theme" class="card admin-card shadow-sm mb-4">
-            <div class="card-header bg-white">Theme</div>
+            <div class="card-header bg-white">Thème</div>
             <div class="card-body">
                 <div class="d-flex flex-wrap gap-2 mb-3">
                     <form method="post">
@@ -241,7 +241,7 @@ $theme = [
         </section>
 
         <section id="section-settings" class="card admin-card shadow-sm mb-4">
-            <div class="card-header bg-white">Parametres</div>
+            <div class="card-header bg-white">Paramètres</div>
             <div class="card-body">
                 <form method="post">
                     <input type="hidden" name="action" value="settings">
@@ -285,7 +285,7 @@ $theme = [
                     <div class="col-md-6">
                         <form method="post" class="mb-3">
                             <input type="hidden" name="action" value="footer_category_add">
-                            <label class="form-label">Categorie</label>
+                            <label class="form-label">Catégorie</label>
                             <div class="d-flex gap-2">
                                 <input class="form-control" name="name" placeholder="Utiles">
                                 <button class="btn btn-outline-primary" type="submit">Ajouter</button>

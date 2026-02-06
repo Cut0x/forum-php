@@ -105,7 +105,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $pdo && is_logged_in()) {
             $stmt->execute([$topicId]);
             $topicOwner = (int) $stmt->fetchColumn();
             if ($topicOwner && $topicOwner !== current_user_id()) {
-                create_notification($pdo, $topicOwner, 'reply', 'Nouvelle reponse sur votre sujet', $topicId, $postId);
+                create_notification($pdo, $topicOwner, 'reply', 'Nouvelle réponse sur votre sujet', $topicId, $postId);
             }
 
             foreach (parse_mentions($content) as $mention) {
@@ -113,7 +113,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $pdo && is_logged_in()) {
                 $stmt->execute([$mention]);
                 $mentionId = (int) $stmt->fetchColumn();
                 if ($mentionId && $mentionId !== current_user_id()) {
-                    create_notification($pdo, $mentionId, 'mention', 'Vous avez ete mentionne', $topicId, $postId);
+                create_notification($pdo, $mentionId, 'mention', 'Vous avez été mentionné', $topicId, $postId);
                 }
             }
         }
@@ -155,10 +155,10 @@ if (!$topic) {
         <span class="<?php echo e(role_badge_class($topic['role'] ?? null)); ?>"><?php echo e(role_label($topic['role'] ?? null)); ?></span>
         · <?php echo e(format_date($topic['created_at'])); ?>
         <?php if (!empty($topic['edited_at'])): ?>
-            · modifie le <?php echo e(format_date($topic['edited_at'])); ?>
+            · modifié le <?php echo e(format_date($topic['edited_at'])); ?>
         <?php endif; ?>
         <?php if (!empty($topic['locked_at'])): ?>
-            · sujet verrouille
+            · sujet verrouillé
         <?php endif; ?>
     </p>
     <?php if (is_logged_in() && ($topic['user_id'] === current_user_id() || is_admin())): ?>
@@ -171,7 +171,7 @@ if (!$topic) {
             <?php if (is_admin()): ?>
                 <form method="post">
                     <input type="hidden" name="action" value="<?php echo empty($topic['locked_at']) ? 'lock_topic' : 'unlock_topic'; ?>">
-                    <button class="btn btn-sm btn-outline-secondary" type="submit"><?php echo empty($topic['locked_at']) ? 'Cloturer' : 'Reouvrir'; ?></button>
+                    <button class="btn btn-sm btn-outline-secondary" type="submit"><?php echo empty($topic['locked_at']) ? 'Clôturer' : 'Réouvrir'; ?></button>
                 </form>
             <?php endif; ?>
         </div>
@@ -201,9 +201,9 @@ if (!$topic) {
                         </div>
                         <small class="text-muted">
                             <?php echo e(format_date($post['created_at'])); ?>
-                            <?php if (!empty($post['edited_at'])): ?>
-                                · modifie le <?php echo e(format_date($post['edited_at'])); ?>
-                            <?php endif; ?>
+                        <?php if (!empty($post['edited_at'])): ?>
+                            · modifié le <?php echo e(format_date($post['edited_at'])); ?>
+                        <?php endif; ?>
                         </small>
                     </div>
                     <?php if (empty($post['deleted_at'])): ?>
@@ -224,7 +224,7 @@ if (!$topic) {
                 </div>
                 <div class="content">
                     <?php if ($post['deleted_at']): ?>
-                        <div class="text-muted">Message supprime.</div>
+                        <div class="text-muted">Message supprimé.</div>
                     <?php else: ?>
                         <?php echo render_markdown_with_mentions($pdo, $post['content']); ?>
                     <?php endif; ?>
@@ -253,12 +253,12 @@ if (!$topic) {
 </div>
 
 <div class="card shadow-sm mt-4">
-    <div class="card-header bg-white">Repondre</div>
+    <div class="card-header bg-white">Répondre</div>
     <div class="card-body">
-    <?php if (!empty($topic['deleted_at']) || !empty($topic['locked_at']) || (!empty($topic['is_readonly']) && !is_admin())): ?>
-        <div class="alert alert-secondary mb-0">Sujet ferme.</div>
+        <?php if (!empty($topic['deleted_at']) || !empty($topic['locked_at']) || (!empty($topic['is_readonly']) && !is_admin())): ?>
+            <div class="alert alert-secondary mb-0">Sujet fermé.</div>
         <?php elseif (!is_logged_in()): ?>
-            <div class="alert alert-warning mb-0">Connectez-vous pour repondre.</div>
+            <div class="alert alert-warning mb-0">Connectez-vous pour répondre.</div>
         <?php else: ?>
             <form method="post">
                 <input type="hidden" name="action" value="reply">

@@ -22,7 +22,7 @@ $topics = $pdo->query('SELECT t.id, t.title, t.created_at, c.name AS category_na
     <div class="col-lg-7">
         <div class="card shadow-sm">
             <div class="card-header bg-white">
-                <strong>Categories</strong>
+                <strong>Catégories</strong>
             </div>
             <div class="list-group list-group-flush">
                 <?php foreach ($categories as $category): ?>

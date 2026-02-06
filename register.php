@@ -54,7 +54,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $pdo) {
         }
     }
 
-    $error = 'Impossible de creer le compte.';
+    $error = 'Impossible de créer le compte.';
 }
 
 require __DIR__ . '/includes/header.php';
@@ -86,7 +86,7 @@ require __DIR__ . '/includes/header.php';
                         </div>
                         <script src="https://hcaptcha.com/1/api.js" async defer></script>
                     <?php endif; ?>
-                    <button class="btn btn-primary w-100" type="submit">Creer un compte</button>
+                    <button class="btn btn-primary w-100" type="submit">Créer un compte</button>
                 </form>
             </div>
         </div>

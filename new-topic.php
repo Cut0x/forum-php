@@ -23,7 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->execute([$categoryId]);
         $readonly = (int) $stmt->fetchColumn();
         if ($readonly === 1 && !is_admin()) {
-            $error = 'Categorie en lecture seule.';
+            $error = 'Catégorie en lecture seule.';
         } else {
             $stmt = $pdo->prepare('INSERT INTO topics (category_id, user_id, title) VALUES (?, ?, ?)');
             $stmt->execute([$categoryId, current_user_id(), $title]);
@@ -39,7 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->execute([$mention]);
             $mentionId = (int) $stmt->fetchColumn();
             if ($mentionId && $mentionId !== current_user_id()) {
-                create_notification($pdo, $mentionId, 'mention', 'Vous avez ete mentionne', $topicId, $postId);
+                create_notification($pdo, $mentionId, 'mention', 'Vous avez été mentionné', $topicId, $postId);
             }
         }
 
@@ -61,9 +61,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <?php endif; ?>
                 <form method="post">
                     <div class="mb-3">
-                        <label class="form-label">Categorie</label>
+                        <label class="form-label">Catégorie</label>
                         <select class="form-select" name="category_id" required>
-                            <option value="">Selectionner...</option>
+                            <option value="">Sélectionner...</option>
                             <?php foreach ($categories as $category): ?>
                                 <option value="<?php echo e((string) $category['id']); ?>" <?php echo !empty($category['is_readonly']) && !is_admin() ? 'disabled' : ''; ?>>
                                     <?php echo e($category['name']); ?><?php echo !empty($category['is_readonly']) ? ' (lecture seule)' : ''; ?>
@@ -79,7 +79,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <label class="form-label">Message (Markdown)</label>
                     <textarea class="form-control" id="markdown" name="content" rows="6" placeholder="Votre message..." data-mentions="1"></textarea>
                     </div>
-                    <div class="preview-box mb-3" id="preview">Apercu...</div>
+                    <div class="preview-box mb-3" id="preview">Aperçu...</div>
                     <button class="btn btn-primary" type="submit">Publier</button>
                 </form>
             </div>
@@ -97,8 +97,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         body.append('content', textarea.value);
         fetch('preview.php', { method: 'POST', body })
             .then((r) => r.text())
-            .then((html) => { preview.innerHTML = html || 'Apercu...'; })
-            .catch(() => { preview.textContent = 'Apercu...'; });
+            .then((html) => { preview.innerHTML = html || 'Aperçu...'; })
+            .catch(() => { preview.textContent = 'Aperçu...'; });
     }
 
     textarea.addEventListener('input', () => {

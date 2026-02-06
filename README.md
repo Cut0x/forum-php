@@ -3,17 +3,17 @@
 Template de forum PHP + MySQL (PDO) avec Bootstrap.
 
 ## Sommaire
-1. Prerequis
+1. Prérequis
 2. Installation rapide
 3. Configuration
 4. Configuration Nginx (VPS)
 5. Configuration Apache (VPS)
-6. Importer la base de donnees
-7. Creer le compte admin
-8. Securite et production
-9. Depannage
+6. Importer la base de données
+7. Créer le compte admin
+8. Sécurité et production
+9. Dépannage
 
-## 1. Prerequis
+## 1. Prérequis
 - PHP 8.1+
 - MySQL 8 ou MariaDB 10.4+
 - Extensions PHP: pdo_mysql, mbstring, openssl, fileinfo
@@ -23,7 +23,7 @@ Template de forum PHP + MySQL (PDO) avec Bootstrap.
 1. Copier le projet dans votre serveur web.
 2. Copier `exemple.config.php` vers `config.php`.
 3. Importer `schema.sql` dans votre base.
-4. Ouvrir le site et creer l'admin via `setup-admin.php`.
+4. Ouvrir le site et créer l'admin via `setup-admin.php`.
 
 ## 3. Configuration
 Editez `config.php`.
@@ -105,20 +105,20 @@ Exemple de vhost:
 </VirtualHost>
 ```
 
-## 6. Importer la base de donnees
-1. Creez la base et importez `schema.sql`.
-2. Verifiez que les tables sont presentes.
+## 6. Importer la base de données
+1. Créez la base et importez `schema.sql`.
+2. Vérifiez que les tables sont présentes.
 
-## 7. Creer le compte admin
+## 7. Créer le compte admin
 Ouvrez `setup-admin.php` une seule fois.
-Une fois cree, supprimez ou bloquez ce fichier.
+Une fois créé, supprimez ou bloquez ce fichier.
 
-## 8. Securite et production
-- Desactivez l'affichage des erreurs en production.
+## 8. Sécurité et production
+- Désactivez l'affichage des erreurs en production.
 - Configurez HTTPS.
-- Verifiez les permissions du dossier `uploads/`.
+- Vérifiez les permissions du dossier `uploads/`.
 
-## 9. Depannage
-- Erreur BDD: verifiez `config.php`.
-- Upload avatar: verifiez l'extension PHP GD.
+## 9. Dépannage
+- Erreur BDD: vérifiez `config.php`.
+- Upload avatar: vérifiez l'extension PHP GD.
 - Emails: activez `mail.enabled` et installez PHPMailer.

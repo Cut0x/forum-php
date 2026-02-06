@@ -101,7 +101,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $pdo && $canEdit) {
             }
         }
 
-        $message = 'Profil mis a jour.';
+        $message = 'Profil mis à jour.';
     }
 }
 
@@ -159,7 +159,7 @@ if ($pdo && $userId) {
 if (!$user) {
     $user = [
         'username' => 'admin',
-        'bio' => 'Developpeur et mainteneur du forum.',
+        'bio' => 'Développeur et mainteneur du forum.',
         'avatar' => 'assets/default_user.jpg',
         'role' => 'admin',
     ];
@@ -205,7 +205,7 @@ $avatar = $user['avatar'] ?: 'assets/default_user.jpg';
                 <?php if ($canEdit): ?>
                     <div class="d-flex gap-2">
                         <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#editProfile">
-                            <i class="bi bi-pencil-square me-1"></i>Editer
+                            <i class="bi bi-pencil-square me-1"></i>Éditer
                         </button>
                     </div>
                 <?php elseif ($stripeEnabled && $stripeUrl): ?>
@@ -318,7 +318,7 @@ $avatar = $user['avatar'] ?: 'assets/default_user.jpg';
     <div class="row g-3 mt-1">
         <div class="col-lg-6">
             <div class="card shadow-sm">
-                <div class="card-header bg-white">Activite recente</div>
+            <div class="card-header bg-white">Activité récente</div>
                 <div class="list-group list-group-flush">
                     <?php foreach ($recentTopics as $topic): ?>
                         <a class="list-group-item list-group-item-action" href="topic.php?id=<?php echo e((string) $topic['id']); ?>">
@@ -352,7 +352,7 @@ $avatar = $user['avatar'] ?: 'assets/default_user.jpg';
 <div class="card shadow-sm mt-4">
     <div class="card-header bg-white d-flex justify-content-between align-items-center">
         <strong>Liens</strong>
-        <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="tooltip" title="Ajoutez vos reseaux">
+        <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="tooltip" title="Ajoutez vos réseaux">
             <i class="bi bi-link-45deg"></i>
         </button>
     </div>

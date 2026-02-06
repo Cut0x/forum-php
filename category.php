@@ -18,7 +18,7 @@ if ($categoryId) {
 }
 
 if (!$category) {
-    echo '<div class="alert alert-danger">Categorie introuvable.</div>';
+    echo '<div class="alert alert-danger">Catégorie introuvable.</div>';
     require __DIR__ . '/includes/footer.php';
     exit;
 }
@@ -43,7 +43,7 @@ if (!$category) {
                 <div class="d-flex justify-content-between">
                     <div>
                         <h6 class="mb-1"><?php echo e($topic['title']); ?></h6>
-                        <small class="text-muted">Derniere activite</small>
+                        <small class="text-muted">Dernière activité</small>
                     </div>
                     <small class="text-muted"><?php echo e(format_date($topic['created_at'])); ?></small>
                 </div>

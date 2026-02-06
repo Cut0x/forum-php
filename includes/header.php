@@ -89,11 +89,11 @@ $canonical = $baseUrl ?: '';
         <div class="collapse navbar-collapse" id="navbarForum">
             <ul class="navbar-nav me-auto">
                 <li class="nav-item"><a class="nav-link" href="index.php">Accueil</a></li>
-                <li class="nav-item"><a class="nav-link" href="categories.php">Categories</a></li>
+                <li class="nav-item"><a class="nav-link" href="categories.php">Catégories</a></li>
             </ul>
             <ul class="navbar-nav">
                 <li class="nav-item">
-                    <a class="nav-link" href="theme.php" data-bs-toggle="tooltip" title="Basculer le theme">
+                    <a class="nav-link" href="theme.php" data-bs-toggle="tooltip" title="Basculer le thème">
                         <?php if ($theme === 'dark'): ?>
                             <i class="bi bi-sun"></i>
                         <?php else: ?>
@@ -119,7 +119,7 @@ $canonical = $baseUrl ?: '';
                     <?php if (is_admin()): ?>
                         <li class="nav-item"><a class="nav-link" href="admin.php"><i class="bi bi-shield-lock me-1"></i>Admin</a></li>
                     <?php endif; ?>
-                    <li class="nav-item"><a class="nav-link" href="logout.php">Deconnexion</a></li>
+                    <li class="nav-item"><a class="nav-link" href="logout.php">Déconnexion</a></li>
                 <?php else: ?>
                     <li class="nav-item"><a class="nav-link" href="login.php">Connexion</a></li>
                     <li class="nav-item"><a class="nav-link" href="register.php">Inscription</a></li>

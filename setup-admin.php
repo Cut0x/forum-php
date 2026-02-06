@@ -5,7 +5,7 @@ require_db();
 
 $exists = (int) $pdo->query("SELECT COUNT(*) FROM users WHERE role = 'admin'")->fetchColumn();
 if ($exists > 0) {
-    echo '<div class="alert alert-warning">Un administrateur existe deja.</div>';
+    echo '<div class="alert alert-warning">Un administrateur existe déjà.</div>';
     require __DIR__ . '/includes/footer.php';
     exit;
 }
@@ -63,7 +63,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <div class="row justify-content-center">
     <div class="col-md-7">
         <div class="card shadow-sm">
-            <div class="card-header bg-white">Creer l\'administrateur</div>
+            <div class="card-header bg-white">Créer l\'administrateur</div>
             <div class="card-body">
                 <?php if ($error): ?>
                     <div class="alert alert-danger py-2 mb-3"><?php echo e($error); ?></div>
@@ -81,7 +81,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <label class="form-label">Mot de passe</label>
                         <input class="form-control" name="password" type="password" required>
                     </div>
-                    <button class="btn btn-primary w-100" type="submit">Creer</button>
+                    <button class="btn btn-primary w-100" type="submit">Créer</button>
                 </form>
             </div>
         </div>

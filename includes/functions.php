@@ -103,7 +103,7 @@ function ensure_defaults(PDO $pdo): void
     $count = (int) $pdo->query('SELECT COUNT(*) FROM categories')->fetchColumn();
     if ($count === 0) {
         $stmt = $pdo->prepare('INSERT INTO categories (name, description, sort_order, is_readonly) VALUES (?, ?, ?, ?)');
-        $stmt->execute(['Annonces', 'Nouveautes et mises a jour.', 1, 1]);
+        $stmt->execute(['Annonces', 'Nouveautés et mises à jour.', 1, 1]);
         $stmt->execute(['Support', 'Questions et aide technique.', 2]);
         $stmt->execute(['Discussions', 'Sujets libres.', 3]);
     }

@@ -23,7 +23,7 @@ if ($pdo) {
                             <?php echo e($footerText); ?>
                         <?php endif; ?>
                     </div>
-                    <div class="footer-tagline small">Communautes, discussions et ressources.</div>
+                <div class="footer-tagline small">Communautés, discussions et ressources.</div>
                 </div>
                 <div class="row g-3 footer-links">
                     <?php foreach ($footerCategories as $cat): ?>
