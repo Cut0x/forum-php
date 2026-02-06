@@ -85,9 +85,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $name = trim($_POST['name'] ?? '');
         $description = trim($_POST['description'] ?? '');
         $readonly = isset($_POST['is_readonly']) ? 1 : 0;
+        $pinned = isset($_POST['is_pinned']) ? 1 : 0;
         if ($name && $description) {
-            $stmt = $pdo->prepare('INSERT INTO categories (name, description, sort_order, is_readonly) VALUES (?, ?, ?, ?)');
-            $stmt->execute([$name, $description, 0, $readonly]);
+            $stmt = $pdo->prepare('INSERT INTO categories (name, description, sort_order, is_readonly, is_pinned) VALUES (?, ?, ?, ?, ?)');
+            $stmt->execute([$name, $description, 0, $readonly, $pinned]);
             $message = 'Catégorie créée.';
         }
     }
@@ -97,9 +98,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $name = trim($_POST['name'] ?? '');
         $description = trim($_POST['description'] ?? '');
         $readonly = isset($_POST['is_readonly']) ? 1 : 0;
+        $pinned = isset($_POST['is_pinned']) ? 1 : 0;
         if ($id && $name && $description) {
-            $stmt = $pdo->prepare('UPDATE categories SET name = ?, description = ?, is_readonly = ? WHERE id = ?');
-            $stmt->execute([$name, $description, $readonly, $id]);
+            $stmt = $pdo->prepare('UPDATE categories SET name = ?, description = ?, is_readonly = ?, is_pinned = ? WHERE id = ?');
+            $stmt->execute([$name, $description, $readonly, $pinned, $id]);
             $message = 'Catégorie mise à jour.';
         }
     }
@@ -172,7 +174,7 @@ $stripeEnabled = get_setting($pdo, 'stripe_enabled', '0');
 $stripeUrl = get_setting($pdo, 'stripe_url', '');
 $footerCategories = $pdo->query('SELECT id, name FROM footer_categories ORDER BY sort_order, name')->fetchAll();
 $footerLinks = $pdo->query('SELECT id, category_id, label, url FROM footer_links ORDER BY sort_order, label')->fetchAll();
-$categories = $pdo->query('SELECT id, name, description, is_readonly FROM categories ORDER BY sort_order, name')->fetchAll();
+$categories = $pdo->query('SELECT id, name, description, is_readonly, is_pinned FROM categories ORDER BY is_pinned DESC, sort_order, name')->fetchAll();
 $theme = [
     'theme_light_bg' => get_setting($pdo, 'theme_light_bg', '#f1f5f9'),
     'theme_light_surface' => get_setting($pdo, 'theme_light_surface', '#ffffff'),
@@ -332,6 +334,12 @@ $theme = [
                                 <label class="form-check-label" for="is_readonly">Lecture seule</label>
                             </div>
                         </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="is_pinned" id="is_pinned">
+                                <label class="form-check-label" for="is_pinned">Épinglée</label>
+                            </div>
+                        </div>
                     </div>
                     <button class="btn btn-primary mt-3" type="submit">Créer</button>
                 </form>
@@ -344,9 +352,12 @@ $theme = [
                                     <div>
                                         <div class="fw-semibold"><?php echo e($cat['name']); ?></div>
                                         <div class="text-muted small"><?php echo e($cat['description']); ?></div>
-                                        <?php if (!empty($cat['is_readonly'])): ?>
-                                            <span class="badge bg-secondary mt-2">Lecture seule</span>
-                                        <?php endif; ?>
+                                <?php if (!empty($cat['is_readonly'])): ?>
+                                    <span class="badge bg-secondary mt-2">Lecture seule</span>
+                                <?php endif; ?>
+                                <?php if (!empty($cat['is_pinned'])): ?>
+                                    <span class="badge bg-warning text-dark mt-2">Épinglée</span>
+                                <?php endif; ?>
                                     </div>
                                     <div class="d-flex gap-2">
                                         <button class="btn btn-sm btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#edit-cat-<?php echo e((string) $cat['id']); ?>">Éditer</button>
@@ -372,6 +383,12 @@ $theme = [
                                                 <div class="form-check">
                                                     <input class="form-check-input" type="checkbox" name="is_readonly" id="readonly-<?php echo e((string) $cat['id']); ?>" <?php echo !empty($cat['is_readonly']) ? 'checked' : ''; ?>>
                                                     <label class="form-check-label" for="readonly-<?php echo e((string) $cat['id']); ?>">Lecture seule</label>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-2 d-flex align-items-center">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" name="is_pinned" id="pinned-<?php echo e((string) $cat['id']); ?>" <?php echo !empty($cat['is_pinned']) ? 'checked' : ''; ?>>
+                                                    <label class="form-check-label" for="pinned-<?php echo e((string) $cat['id']); ?>">Épinglée</label>
                                                 </div>
                                             </div>
                                         </div>
