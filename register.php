@@ -11,7 +11,8 @@ $hcaptchaSite = $_ENV['HCAPTCHA_SITE'] ?? '';
 $hcaptchaEnabled = ($_ENV['HCAPTCHA_ENABLED'] ?? '0') === '1';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $pdo) {
-    $username = trim($_POST['username'] ?? '');
+    $name = trim($_POST['name'] ?? ($_POST['username'] ?? ''));
+    $username = normalize_username($name);
     $email = trim($_POST['email'] ?? '');
     $password = $_POST['password'] ?? '';
 
@@ -31,6 +32,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $pdo) {
         }
     }
 
+    if (!$error && $email && $password) {
+        if ($name === '' || $username === '' || strlen($username) < 3 || strlen($username) > 30) {
+            $error = 'Nom d’utilisateur invalide.';
+        }
+    }
+
     if (!$error && $username && $email && $password) {
         $stmt = $pdo->prepare('SELECT id FROM users WHERE email = ? OR username = ?');
         $stmt->execute([$email, $username]);
@@ -38,11 +45,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $pdo) {
 
         if (!$exists) {
             $hash = password_hash($password, PASSWORD_DEFAULT);
-            $stmt = $pdo->prepare('INSERT INTO users (username, email, password_hash, role) VALUES (?, ?, ?, ?)');
-            $stmt->execute([$username, $email, $hash, 'member']);
+            $stmt = $pdo->prepare('INSERT INTO users (name, username, email, password_hash, role) VALUES (?, ?, ?, ?, ?)');
+            $stmt->execute([$name, $username, $email, $hash, 'member']);
 
             $_SESSION['user_id'] = (int) $pdo->lastInsertId();
             $_SESSION['username'] = $username;
+            $_SESSION['name'] = $name;
             $_SESSION['role'] = 'member';
 
             $mailEnabled = ($_ENV['MAIL_ENABLED'] ?? '0') === '1';
@@ -54,7 +62,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $pdo) {
         }
     }
 
-    $error = 'Impossible de créer le compte.';
+    $error = $error ?: 'Impossible de créer le compte.';
 }
 
 require __DIR__ . '/includes/header.php';
@@ -69,8 +77,9 @@ require __DIR__ . '/includes/header.php';
                 <?php endif; ?>
                 <form method="post">
                     <div class="mb-3">
-                        <label class="form-label">Pseudo</label>
-                        <input class="form-control" name="username" type="text" required>
+                        <label class="form-label">Nom</label>
+                        <input class="form-control" name="name" type="text" required>
+                        <div class="form-text">Les accents et majuscules sont convertis pour créer le @username.</div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Email</label>

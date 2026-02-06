@@ -104,7 +104,8 @@ if ($pdo) {
                     items.forEach(item => {
                         const row = document.createElement('div');
                         row.className = 'mention-item d-flex align-items-center gap-2';
-                        row.innerHTML = `<img src="${item.avatar || 'assets/default_user.jpg'}" class="rounded-circle" width="24" height="24" alt=""> <strong>@${item.username}</strong>`;
+                        const display = item.name || item.username;
+                        row.innerHTML = `<img src="${item.avatar || 'assets/default_user.jpg'}" class="rounded-circle" width="24" height="24" alt=""> <strong>${display}</strong> <span class="text-muted">@${item.username}</span>`;
                         row.addEventListener('click', () => {
                             const value = textarea.value;
                             const before = value.slice(0, current.start);

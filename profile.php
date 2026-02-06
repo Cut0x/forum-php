@@ -12,6 +12,8 @@ $message = '';
 $error = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $pdo && $canEdit) {
+    $name = trim($_POST['name'] ?? '');
+    $newUsername = normalize_username($name);
     $bio = trim($_POST['bio'] ?? '');
     $links = [];
 
@@ -83,12 +85,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $pdo && $canEdit) {
     }
 
     if (!$error) {
-        if ($avatarPath) {
-            $stmt = $pdo->prepare('UPDATE users SET bio = ?, avatar = ? WHERE id = ?');
-            $stmt->execute([$bio, $avatarPath, $userId]);
+        if ($name === '' || $newUsername === '' || strlen($newUsername) < 3 || strlen($newUsername) > 30) {
+            $error = 'Nom invalide.';
         } else {
-            $stmt = $pdo->prepare('UPDATE users SET bio = ? WHERE id = ?');
-            $stmt->execute([$bio, $userId]);
+            $stmt = $pdo->prepare('SELECT id FROM users WHERE username = ? AND id != ?');
+            $stmt->execute([$newUsername, $userId]);
+            if ($stmt->fetch()) {
+                $error = 'Ce @username est déjà pris.';
+            }
+        }
+    }
+
+    if (!$error) {
+        if ($avatarPath) {
+            $stmt = $pdo->prepare('UPDATE users SET name = ?, username = ?, bio = ?, avatar = ? WHERE id = ?');
+            $stmt->execute([$name, $newUsername, $bio, $avatarPath, $userId]);
+        } else {
+            $stmt = $pdo->prepare('UPDATE users SET name = ?, username = ?, bio = ? WHERE id = ?');
+            $stmt->execute([$name, $newUsername, $bio, $userId]);
+        }
+
+        if ($userId === current_user_id()) {
+            $_SESSION['name'] = $name;
+            $_SESSION['username'] = $newUsername;
         }
 
         $stmt = $pdo->prepare('DELETE FROM user_links WHERE user_id = ?');
@@ -122,7 +141,7 @@ $stripeEnabled = false;
 $stripeUrl = '';
 
 if ($pdo && $userId) {
-    $stmt = $pdo->prepare('SELECT id, username, bio, avatar, role FROM users WHERE id = ?');
+    $stmt = $pdo->prepare('SELECT id, name, username, bio, avatar, role FROM users WHERE id = ?');
     $stmt->execute([$userId]);
     $user = $stmt->fetch();
 
@@ -158,6 +177,7 @@ if ($pdo && $userId) {
 
 if (!$user) {
     $user = [
+        'name' => 'admin',
         'username' => 'admin',
         'bio' => 'Développeur et mainteneur du forum.',
         'avatar' => 'assets/default_user.jpg',
@@ -195,7 +215,8 @@ $avatar = $user['avatar'] ?: 'assets/default_user.jpg';
             <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
                 <div>
                     <div class="d-flex align-items-center gap-2 mb-1">
-                        <h1 class="h4 mb-0"><?php echo e($user['username']); ?></h1>
+                        <h1 class="h4 mb-0"><?php echo e($user['name'] ?: $user['username']); ?></h1>
+                        <span class="text-muted">@<?php echo e($user['username']); ?></span>
                         <span class="<?php echo e(role_badge_class($user['role'] ?? null)); ?>" data-bs-toggle="tooltip" title="Role utilisateur">
                             <?php echo e(role_label($user['role'] ?? null)); ?>
                         </span>
@@ -237,6 +258,11 @@ $avatar = $user['avatar'] ?: 'assets/default_user.jpg';
                     <div class="alert alert-danger py-2 mb-3"><?php echo e($error); ?></div>
                 <?php endif; ?>
                 <form method="post" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label class="form-label">Nom</label>
+                        <input class="form-control" name="name" value="<?php echo e($user['name'] ?? $user['username']); ?>" required>
+                        <div class="form-text">Le @username est recalculé automatiquement (sans accents/majuscules).</div>
+                    </div>
                     <div class="mb-3">
                         <label class="form-label">Bio</label>
                         <textarea class="form-control" name="bio" rows="3"><?php echo e($user['bio']); ?></textarea>

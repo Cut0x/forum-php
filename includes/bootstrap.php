@@ -37,12 +37,18 @@ if (is_array($config) && isset($config['hcaptcha'])) {
 }
 
 if (isset($_SESSION['user_id']) && $pdo) {
-    $stmt = $pdo->prepare('SELECT role, username FROM users WHERE id = ?');
+    $hasName = column_exists($pdo, 'users', 'name');
+    if ($hasName) {
+        $stmt = $pdo->prepare('SELECT role, username, name FROM users WHERE id = ?');
+    } else {
+        $stmt = $pdo->prepare('SELECT role, username FROM users WHERE id = ?');
+    }
     $stmt->execute([$_SESSION['user_id']]);
     $row = $stmt->fetch();
     if ($row) {
         $_SESSION['role'] = $row['role'];
         $_SESSION['username'] = $row['username'];
+        $_SESSION['name'] = $row['name'] ?? $row['username'];
     }
 }
 

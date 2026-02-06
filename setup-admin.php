@@ -12,14 +12,15 @@ if ($exists > 0) {
 
 $error = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $username = trim($_POST['username'] ?? '');
+    $name = trim($_POST['name'] ?? ($_POST['username'] ?? ''));
+    $username = normalize_username($name);
     $email = trim($_POST['email'] ?? '');
     $password = $_POST['password'] ?? '';
 
-    if ($username && $email && $password) {
+    if ($name && $username && $email && $password) {
         $hash = password_hash($password, PASSWORD_DEFAULT);
-        $stmt = $pdo->prepare('INSERT INTO users (username, email, password_hash, role) VALUES (?, ?, ?, ?)');
-        $stmt->execute([$username, $email, $hash, 'admin']);
+        $stmt = $pdo->prepare('INSERT INTO users (name, username, email, password_hash, role) VALUES (?, ?, ?, ?, ?)');
+        $stmt->execute([$name, $username, $email, $hash, 'admin']);
         $adminId = (int) $pdo->lastInsertId();
 
         $badges = [
@@ -51,6 +52,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         $_SESSION['user_id'] = $adminId;
         $_SESSION['username'] = $username;
+        $_SESSION['name'] = $name;
         $_SESSION['role'] = 'admin';
 
         header('Location: admin.php');
@@ -70,8 +72,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <?php endif; ?>
                 <form method="post">
                     <div class="mb-3">
-                        <label class="form-label">Pseudo</label>
-                        <input class="form-control" name="username" required>
+                        <label class="form-label">Nom</label>
+                        <input class="form-control" name="name" required>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Email</label>

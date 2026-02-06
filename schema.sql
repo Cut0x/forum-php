@@ -3,6 +3,7 @@ USE forum_php;
 
 CREATE TABLE users (
     id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(80) NOT NULL,
     username VARCHAR(50) NOT NULL UNIQUE,
     email VARCHAR(190) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,

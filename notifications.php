@@ -66,11 +66,11 @@ $totalPages = max(1, (int) ceil($total / $perPage));
 $hasActor = column_exists($pdo, 'notifications', 'actor_id');
 if ($type === 'all') {
     if ($hasActor) {
-        $stmt = $pdo->prepare('SELECT n.id, n.type, n.message, n.topic_id, n.post_id, n.is_read, n.created_at, u.id AS actor_id, u.username AS actor_name
+        $stmt = $pdo->prepare('SELECT n.id, n.type, n.message, n.topic_id, n.post_id, n.is_read, n.created_at, u.id AS actor_id, u.name AS actor_name, u.username AS actor_username
             FROM notifications n LEFT JOIN users u ON u.id = n.actor_id
             WHERE n.user_id = ? ORDER BY n.created_at DESC LIMIT ? OFFSET ?');
     } else {
-        $stmt = $pdo->prepare('SELECT n.id, n.type, n.message, n.topic_id, n.post_id, n.is_read, n.created_at, NULL AS actor_id, NULL AS actor_name
+        $stmt = $pdo->prepare('SELECT n.id, n.type, n.message, n.topic_id, n.post_id, n.is_read, n.created_at, NULL AS actor_id, NULL AS actor_name, NULL AS actor_username
             FROM notifications n
             WHERE n.user_id = ? ORDER BY n.created_at DESC LIMIT ? OFFSET ?');
     }
@@ -80,11 +80,11 @@ if ($type === 'all') {
     $stmt->execute();
 } else {
     if ($hasActor) {
-        $stmt = $pdo->prepare('SELECT n.id, n.type, n.message, n.topic_id, n.post_id, n.is_read, n.created_at, u.id AS actor_id, u.username AS actor_name
+        $stmt = $pdo->prepare('SELECT n.id, n.type, n.message, n.topic_id, n.post_id, n.is_read, n.created_at, u.id AS actor_id, u.name AS actor_name, u.username AS actor_username
             FROM notifications n LEFT JOIN users u ON u.id = n.actor_id
             WHERE n.user_id = ? AND n.type = ? ORDER BY n.created_at DESC LIMIT ? OFFSET ?');
     } else {
-        $stmt = $pdo->prepare('SELECT n.id, n.type, n.message, n.topic_id, n.post_id, n.is_read, n.created_at, NULL AS actor_id, NULL AS actor_name
+        $stmt = $pdo->prepare('SELECT n.id, n.type, n.message, n.topic_id, n.post_id, n.is_read, n.created_at, NULL AS actor_id, NULL AS actor_name, NULL AS actor_username
             FROM notifications n
             WHERE n.user_id = ? AND n.type = ? ORDER BY n.created_at DESC LIMIT ? OFFSET ?');
     }
@@ -136,7 +136,12 @@ foreach ($stmt->fetchAll() as $row) {
                         <a class="text-decoration-none" href="<?php echo e($link); ?>"><?php echo e($notif['message']); ?></a>
                         <?php if (!empty($notif['actor_id'])): ?>
                             <div class="small">
-                                Par <a class="text-decoration-none" href="profile.php?id=<?php echo e((string) $notif['actor_id']); ?>">@<?php echo e($notif['actor_name']); ?></a>
+                                Par <a class="text-decoration-none" href="profile.php?id=<?php echo e((string) $notif['actor_id']); ?>">
+                                    <?php echo e($notif['actor_name'] ?: $notif['actor_username']); ?>
+                                </a>
+                                <?php if (!empty($notif['actor_username'])): ?>
+                                    <span class="text-muted">@<?php echo e($notif['actor_username']); ?></span>
+                                <?php endif; ?>
                             </div>
                         <?php endif; ?>
                         <div class="text-muted small"><?php echo e(format_date($notif['created_at'])); ?></div>
