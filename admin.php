@@ -22,8 +22,17 @@ function handle_emote_upload(string $inputName, string $targetDir, ?string &$err
         return null;
     }
 
-    if (($file['error'] ?? UPLOAD_ERR_OK) !== UPLOAD_ERR_OK) {
-        $error = 'Upload échoué.';
+    $err = (int) ($file['error'] ?? UPLOAD_ERR_OK);
+    if ($err !== UPLOAD_ERR_OK) {
+        $error = match ($err) {
+            UPLOAD_ERR_INI_SIZE => 'Upload échoué: fichier trop volumineux (upload_max_filesize).',
+            UPLOAD_ERR_FORM_SIZE => 'Upload échoué: fichier trop volumineux (MAX_FILE_SIZE).',
+            UPLOAD_ERR_PARTIAL => 'Upload échoué: transfert partiel.',
+            UPLOAD_ERR_NO_TMP_DIR => 'Upload échoué: dossier temporaire manquant.',
+            UPLOAD_ERR_CANT_WRITE => 'Upload échoué: impossible d’écrire sur le disque.',
+            UPLOAD_ERR_EXTENSION => 'Upload échoué: extension PHP a arrêté le transfert.',
+            default => 'Upload échoué.',
+        };
         return null;
     }
 
@@ -47,6 +56,11 @@ function handle_emote_upload(string $inputName, string $targetDir, ?string &$err
         mkdir($targetDir, 0777, true);
     }
 
+    if (!is_writable($targetDir)) {
+        $error = 'Upload échoué: dossier assets/emotes non accessible en écriture.';
+        return null;
+    }
+
     $filename = $base . '.' . $ext;
     $i = 1;
     while (file_exists($targetDir . '/' . $filename)) {
@@ -54,8 +68,13 @@ function handle_emote_upload(string $inputName, string $targetDir, ?string &$err
         $i++;
     }
 
+    if (!is_uploaded_file($file['tmp_name'] ?? '')) {
+        $error = 'Upload échoué: fichier temporaire invalide.';
+        return null;
+    }
+
     if (!move_uploaded_file($file['tmp_name'], $targetDir . '/' . $filename)) {
-        $error = 'Impossible de déplacer le fichier.';
+        $error = 'Impossible de déplacer le fichier (vérifiez les permissions du dossier).';
         return null;
     }
 
