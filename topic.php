@@ -4,15 +4,6 @@ require __DIR__ . '/includes/bootstrap.php';
 $topicId = (int)($_GET['id'] ?? 0);
 $message = '';
 
-$backUrl = $_SERVER['HTTP_REFERER'] ?? '';
-$safeBack = '';
-if ($backUrl) {
-    $parts = parse_url($backUrl);
-    $host = $parts['host'] ?? '';
-    if ($host === '' || $host === ($_SERVER['HTTP_HOST'] ?? '')) {
-        $safeBack = $backUrl;
-    }
-}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $pdo && is_logged_in()) {
     $action = $_POST['action'] ?? '';
@@ -140,7 +131,7 @@ $topic = null;
 $posts = [];
 
 if ($topicId) {
-    $stmt = $pdo->prepare('SELECT t.id, t.title, t.created_at, t.edited_at, t.locked_at, t.deleted_at, c.is_readonly, u.name, u.username, u.role, u.id AS user_id FROM topics t JOIN users u ON u.id = t.user_id JOIN categories c ON c.id = t.category_id WHERE t.id = ?');
+    $stmt = $pdo->prepare('SELECT t.id, t.title, t.created_at, t.edited_at, t.locked_at, t.deleted_at, t.category_id, c.is_readonly, u.name, u.username, u.role, u.id AS user_id FROM topics t JOIN users u ON u.id = t.user_id JOIN categories c ON c.id = t.category_id WHERE t.id = ?');
     $stmt->execute([$topicId]);
     $topic = $stmt->fetch();
 
@@ -159,15 +150,9 @@ if (!$topic) {
 }
 ?>
 <section class="mb-4">
-    <?php if ($safeBack): ?>
-        <a class="btn btn-sm btn-outline-secondary mb-2" href="<?php echo e($safeBack); ?>">
-            <i class="bi bi-arrow-left"></i> Retour
-        </a>
-    <?php else: ?>
-        <a class="btn btn-sm btn-outline-secondary mb-2" href="index.php">
-            <i class="bi bi-arrow-left"></i> Retour
-        </a>
-    <?php endif; ?>
+    <a class="btn btn-sm btn-outline-secondary mb-2" href="category.php?id=<?php echo e((string) $topic['category_id']); ?>">
+        <i class="bi bi-arrow-left"></i> Retour à la catégorie
+    </a>
     <h1 class="h4 mb-1"><?php echo e($topic['title']); ?></h1>
     <p class="text-muted">
         Par <a class="text-decoration-none" href="profile.php?id=<?php echo e((string) $topic['user_id']); ?>"><?php echo e($topic['name'] ?: $topic['username']); ?></a>
