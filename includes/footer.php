@@ -10,6 +10,14 @@ if ($pdo) {
     $footerCategories = $pdo->query('SELECT id, name FROM footer_categories ORDER BY sort_order, name')->fetchAll();
     $footerLinks = $pdo->query('SELECT id, category_id, label, url FROM footer_links ORDER BY sort_order, label')->fetchAll();
 }
+$emotesData = [];
+if ($pdo) {
+    try {
+        $emotesData = $pdo->query('SELECT name, file, title FROM emotes WHERE is_enabled = 1 ORDER BY name')->fetchAll();
+    } catch (Throwable $e) {
+        $emotesData = [];
+    }
+}
 ?>
 <footer class="mt-auto app-footer py-5">
     <div class="container">
@@ -47,6 +55,7 @@ if ($pdo) {
 </footer>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
+    window.__EMOTES = <?php echo json_encode($emotesData, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT); ?>;
     const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
     tooltipTriggerList.map((tooltipTriggerEl) => new bootstrap.Tooltip(tooltipTriggerEl));
 
@@ -119,15 +128,22 @@ if ($pdo) {
 
     document.querySelectorAll('[data-mentions="1"]').forEach(initMentions);
 
-    let emoteCache = null;
+    let emoteCache = Array.isArray(window.__EMOTES) && window.__EMOTES.length ? window.__EMOTES : null;
+    let emoteCacheTs = 0;
     function fetchEmotes() {
-        if (emoteCache) {
+        if (emoteCache && emoteCache.length > 0) {
             return Promise.resolve(emoteCache);
         }
         return fetch('emotes.php')
             .then(r => r.json())
             .then(items => {
-                emoteCache = Array.isArray(items) ? items : [];
+                const list = Array.isArray(items) ? items : [];
+                if (list.length > 0) {
+                    emoteCache = list;
+                    emoteCacheTs = Date.now();
+                } else {
+                    emoteCache = null;
+                }
                 return emoteCache;
             })
             .catch(() => []);
