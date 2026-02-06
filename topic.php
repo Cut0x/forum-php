@@ -88,7 +88,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $pdo && is_logged_in()) {
             $ownerId = (int) $stmt->fetchColumn();
             if ($ownerId && $ownerId !== current_user_id()) {
                 $label = $value === 1 ? 'Upvote' : 'Downvote';
-                create_notification($pdo, $ownerId, 'vote', $label . ' sur votre message', $topicId, $postId);
+                create_notification($pdo, $ownerId, 'vote', $label . ' sur votre message', $topicId, $postId, current_user_id());
             }
         }
     }
@@ -105,7 +105,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $pdo && is_logged_in()) {
             $stmt->execute([$topicId]);
             $topicOwner = (int) $stmt->fetchColumn();
             if ($topicOwner && $topicOwner !== current_user_id()) {
-                create_notification($pdo, $topicOwner, 'reply', 'Nouvelle réponse sur votre sujet', $topicId, $postId);
+                create_notification($pdo, $topicOwner, 'reply', 'Nouvelle réponse sur votre sujet', $topicId, $postId, current_user_id());
             }
 
             foreach (parse_mentions($content) as $mention) {
@@ -113,7 +113,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $pdo && is_logged_in()) {
                 $stmt->execute([$mention]);
                 $mentionId = (int) $stmt->fetchColumn();
                 if ($mentionId && $mentionId !== current_user_id()) {
-                create_notification($pdo, $mentionId, 'mention', 'Vous avez été mentionné', $topicId, $postId);
+                    create_notification($pdo, $mentionId, 'mention', 'Vous avez été mentionné', $topicId, $postId, current_user_id());
                 }
             }
         }

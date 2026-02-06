@@ -1,0 +1,77 @@
+-- Migration idempotente
+
+-- categories
+ALTER TABLE categories ADD COLUMN IF NOT EXISTS is_readonly TINYINT NOT NULL DEFAULT 0;
+
+-- topics
+ALTER TABLE topics ADD COLUMN IF NOT EXISTS locked_at DATETIME NULL;
+ALTER TABLE topics ADD COLUMN IF NOT EXISTS edited_at DATETIME NULL;
+ALTER TABLE topics ADD COLUMN IF NOT EXISTS deleted_at DATETIME NULL;
+
+-- posts
+ALTER TABLE posts ADD COLUMN IF NOT EXISTS edited_at DATETIME NULL;
+ALTER TABLE posts ADD COLUMN IF NOT EXISTS deleted_at DATETIME NULL;
+
+-- badges
+ALTER TABLE badges ADD COLUMN IF NOT EXISTS code VARCHAR(40) NOT NULL UNIQUE;
+ALTER TABLE badges ADD COLUMN IF NOT EXISTS icon VARCHAR(255) NOT NULL;
+
+-- tables
+CREATE TABLE IF NOT EXISTS user_badges (
+    user_id INT NOT NULL,
+    badge_id INT NOT NULL,
+    PRIMARY KEY (user_id, badge_id),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (badge_id) REFERENCES badges(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS post_votes (
+    user_id INT NOT NULL,
+    post_id INT NOT NULL,
+    value TINYINT NOT NULL,
+    PRIMARY KEY (user_id, post_id),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS settings (
+    `key` VARCHAR(80) PRIMARY KEY,
+    value TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS notifications (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    actor_id INT NULL,
+    type VARCHAR(30) NOT NULL,
+    message VARCHAR(255) NOT NULL,
+    topic_id INT NULL,
+    post_id INT NULL,
+    is_read TINYINT NOT NULL DEFAULT 0,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (actor_id) REFERENCES users(id) ON DELETE SET NULL
+);
+
+CREATE TABLE IF NOT EXISTS user_links (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    label VARCHAR(80) NOT NULL,
+    url VARCHAR(255) NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS footer_categories (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(80) NOT NULL,
+    sort_order INT NOT NULL DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS footer_links (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    category_id INT NOT NULL,
+    label VARCHAR(80) NOT NULL,
+    url VARCHAR(255) NOT NULL,
+    sort_order INT NOT NULL DEFAULT 0,
+    FOREIGN KEY (category_id) REFERENCES footer_categories(id) ON DELETE CASCADE
+);

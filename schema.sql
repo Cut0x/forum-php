@@ -78,13 +78,15 @@ CREATE TABLE settings (
 CREATE TABLE notifications (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
+    actor_id INT NULL,
     type VARCHAR(30) NOT NULL,
     message VARCHAR(255) NOT NULL,
     topic_id INT NULL,
     post_id INT NULL,
     is_read TINYINT NOT NULL DEFAULT 0,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (actor_id) REFERENCES users(id) ON DELETE SET NULL
 );
 
 CREATE TABLE user_links (

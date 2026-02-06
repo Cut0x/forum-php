@@ -259,10 +259,10 @@ function set_setting(PDO $pdo, string $key, string $value): void
     $stmt->execute([$key, $value]);
 }
 
-function create_notification(PDO $pdo, int $userId, string $type, string $message, ?int $topicId = null, ?int $postId = null): void
+function create_notification(PDO $pdo, int $userId, string $type, string $message, ?int $topicId = null, ?int $postId = null, ?int $actorId = null): void
 {
-    $stmt = $pdo->prepare('INSERT INTO notifications (user_id, type, message, topic_id, post_id) VALUES (?, ?, ?, ?, ?)');
-    $stmt->execute([$userId, $type, $message, $topicId, $postId]);
+    $stmt = $pdo->prepare('INSERT INTO notifications (user_id, actor_id, type, message, topic_id, post_id) VALUES (?, ?, ?, ?, ?, ?)');
+    $stmt->execute([$userId, $actorId, $type, $message, $topicId, $postId]);
 
     $mailEnabled = ($_ENV['MAIL_ENABLED'] ?? '0') === '1';
     if ($mailEnabled) {
@@ -273,6 +273,16 @@ function create_notification(PDO $pdo, int $userId, string $type, string $messag
             send_mail($email, 'Notification', '<p>' . e($message) . '</p>');
         }
     }
+}
+
+function notification_label(string $type): string
+{
+    return match ($type) {
+        'reply' => 'Réponses',
+        'mention' => 'Mentions',
+        'vote' => 'Votes',
+        default => 'Autres',
+    };
 }
 
 function parse_mentions(string $content): array
