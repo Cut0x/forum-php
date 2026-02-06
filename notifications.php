@@ -63,18 +63,31 @@ if ($type === 'all') {
 $total = (int) $stmt->fetchColumn();
 $totalPages = max(1, (int) ceil($total / $perPage));
 
+$hasActor = column_exists($pdo, 'notifications', 'actor_id');
 if ($type === 'all') {
-    $stmt = $pdo->prepare('SELECT n.id, n.type, n.message, n.topic_id, n.post_id, n.is_read, n.created_at, u.id AS actor_id, u.username AS actor_name
-        FROM notifications n LEFT JOIN users u ON u.id = n.actor_id
-        WHERE n.user_id = ? ORDER BY n.created_at DESC LIMIT ? OFFSET ?');
+    if ($hasActor) {
+        $stmt = $pdo->prepare('SELECT n.id, n.type, n.message, n.topic_id, n.post_id, n.is_read, n.created_at, u.id AS actor_id, u.username AS actor_name
+            FROM notifications n LEFT JOIN users u ON u.id = n.actor_id
+            WHERE n.user_id = ? ORDER BY n.created_at DESC LIMIT ? OFFSET ?');
+    } else {
+        $stmt = $pdo->prepare('SELECT n.id, n.type, n.message, n.topic_id, n.post_id, n.is_read, n.created_at, NULL AS actor_id, NULL AS actor_name
+            FROM notifications n
+            WHERE n.user_id = ? ORDER BY n.created_at DESC LIMIT ? OFFSET ?');
+    }
     $stmt->bindValue(1, current_user_id(), PDO::PARAM_INT);
     $stmt->bindValue(2, $perPage, PDO::PARAM_INT);
     $stmt->bindValue(3, $offset, PDO::PARAM_INT);
     $stmt->execute();
 } else {
-    $stmt = $pdo->prepare('SELECT n.id, n.type, n.message, n.topic_id, n.post_id, n.is_read, n.created_at, u.id AS actor_id, u.username AS actor_name
-        FROM notifications n LEFT JOIN users u ON u.id = n.actor_id
-        WHERE n.user_id = ? AND n.type = ? ORDER BY n.created_at DESC LIMIT ? OFFSET ?');
+    if ($hasActor) {
+        $stmt = $pdo->prepare('SELECT n.id, n.type, n.message, n.topic_id, n.post_id, n.is_read, n.created_at, u.id AS actor_id, u.username AS actor_name
+            FROM notifications n LEFT JOIN users u ON u.id = n.actor_id
+            WHERE n.user_id = ? AND n.type = ? ORDER BY n.created_at DESC LIMIT ? OFFSET ?');
+    } else {
+        $stmt = $pdo->prepare('SELECT n.id, n.type, n.message, n.topic_id, n.post_id, n.is_read, n.created_at, NULL AS actor_id, NULL AS actor_name
+            FROM notifications n
+            WHERE n.user_id = ? AND n.type = ? ORDER BY n.created_at DESC LIMIT ? OFFSET ?');
+    }
     $stmt->bindValue(1, current_user_id(), PDO::PARAM_INT);
     $stmt->bindValue(2, $type, PDO::PARAM_STR);
     $stmt->bindValue(3, $perPage, PDO::PARAM_INT);

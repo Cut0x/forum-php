@@ -4,11 +4,22 @@ $footerText = 'Forum PHP';
 $footerLink = '';
 $footerCategories = [];
 $footerLinks = [];
-if ($pdo) {
+$emotesData = [];
+$pdoReady = isset($pdo) && $pdo;
+if ($pdoReady) {
     $footerText = get_setting($pdo, 'footer_text', $footerText) ?? $footerText;
     $footerLink = get_setting($pdo, 'footer_link', '') ?? '';
     $footerCategories = $pdo->query('SELECT id, name FROM footer_categories ORDER BY sort_order, name')->fetchAll();
     $footerLinks = $pdo->query('SELECT id, category_id, label, url FROM footer_links ORDER BY sort_order, label')->fetchAll();
+    try {
+        $emotesData = $pdo->query('SELECT name, file, title FROM emotes WHERE is_enabled = 1 ORDER BY name')->fetchAll();
+    } catch (Throwable $e) {
+        $emotesData = [];
+    }
+}
+$emotesJson = json_encode($emotesData, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT | JSON_INVALID_UTF8_SUBSTITUTE);
+if ($emotesJson === false) {
+    $emotesJson = '[]';
 }
 ?>
 <footer class="mt-auto app-footer py-5">
@@ -47,6 +58,7 @@ if ($pdo) {
 </footer>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
+    window.__EMOTES = <?php echo $emotesJson; ?>;
     const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
     tooltipTriggerList.map((tooltipTriggerEl) => new bootstrap.Tooltip(tooltipTriggerEl));
 
@@ -118,6 +130,100 @@ if ($pdo) {
     }
 
     document.querySelectorAll('[data-mentions="1"]').forEach(initMentions);
+
+    let emoteCache = Array.isArray(window.__EMOTES) && window.__EMOTES.length ? window.__EMOTES : null;
+    function fetchEmotes() {
+        if (emoteCache && emoteCache.length > 0) {
+            return Promise.resolve(emoteCache);
+        }
+        return fetch('emotes.php')
+            .then(r => r.json())
+            .then(items => {
+                const list = Array.isArray(items) ? items : [];
+                if (list.length > 0) {
+                    emoteCache = list;
+                } else {
+                    emoteCache = null;
+                }
+                return list;
+            })
+            .catch(() => []);
+    }
+
+    function insertAtCursor(textarea, text) {
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const value = textarea.value;
+        textarea.value = value.slice(0, start) + text + value.slice(end);
+        textarea.selectionStart = textarea.selectionEnd = start + text.length;
+        textarea.focus();
+        textarea.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+
+    function initEmotes(textarea) {
+        const toolbar = document.createElement('div');
+        toolbar.className = 'emote-toolbar';
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'btn btn-sm btn-outline-secondary';
+        button.textContent = 'Émotes';
+        const panel = document.createElement('div');
+        panel.className = 'emote-panel d-none';
+        toolbar.appendChild(button);
+        toolbar.appendChild(panel);
+
+        textarea.parentNode.insertBefore(toolbar, textarea);
+
+        let opened = false;
+        function closePanel() {
+            panel.classList.add('d-none');
+            opened = false;
+        }
+
+        button.addEventListener('click', () => {
+            if (opened) {
+                closePanel();
+                return;
+            }
+            fetchEmotes().then(items => {
+                panel.innerHTML = '';
+                if (!items.length) {
+                    const empty = document.createElement('div');
+                    empty.className = 'text-muted small';
+                    empty.textContent = 'Aucune émote disponible.';
+                    panel.appendChild(empty);
+                } else {
+                    items.forEach(item => {
+                        const name = item.name || '';
+                        const file = item.file || '';
+                        if (!name || !file) {
+                            return;
+                        }
+                        const btn = document.createElement('button');
+                        btn.type = 'button';
+                        btn.className = 'emote-item';
+                        btn.title = ':' + name + ':';
+                        btn.setAttribute('aria-label', ':' + name + ':');
+                        btn.innerHTML = `<img class="emote" src="assets/emotes/${file}" alt=":${name}:">`;
+                        btn.addEventListener('click', () => {
+                            insertAtCursor(textarea, ':' + name + ': ');
+                        });
+                        panel.appendChild(btn);
+                    });
+                }
+                panel.classList.remove('d-none');
+                opened = true;
+            });
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!opened) return;
+            if (toolbar.contains(e.target)) return;
+            closePanel();
+        });
+    }
+
+    document.querySelectorAll('[data-emotes="1"]').forEach(initEmotes);
 </script>
 </body>
 </html>
