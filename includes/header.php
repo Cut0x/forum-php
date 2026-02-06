@@ -10,6 +10,7 @@ if ($pdo && $isLogged) {
     $stmt = $pdo->prepare('SELECT COUNT(*) FROM notifications WHERE user_id = ? AND is_read = 0');
     $stmt->execute([current_user_id()]);
     $notifCount = (int) $stmt->fetchColumn();
+    $appName = get_setting($pdo, 'site_title', $appName) ?? $appName;
 }
 $themeVars = [
     'light_bg' => $pdo ? get_setting($pdo, 'theme_light_bg', '#f1f5f9') : '#f1f5f9',
@@ -24,8 +25,11 @@ $themeVars = [
     'dark_muted' => $pdo ? get_setting($pdo, 'theme_dark_muted', '#94a3b8') : '#94a3b8',
     'dark_primary' => $pdo ? get_setting($pdo, 'theme_dark_primary', '#4f8cff') : '#4f8cff',
     'dark_accent' => $pdo ? get_setting($pdo, 'theme_dark_accent', '#00d1b2') : '#00d1b2',
-    'font' => $pdo ? get_setting($pdo, 'theme_font', '\"Space Grotesk\", system-ui, -apple-system, Segoe UI, sans-serif') : '\"Space Grotesk\", system-ui, -apple-system, Segoe UI, sans-serif',
+    'font' => $pdo ? get_setting($pdo, 'theme_font', '\"Inter\", system-ui, sans-serif') : '\"Inter\", system-ui, sans-serif',
+    'version' => $pdo ? get_setting($pdo, 'theme_version', '1') : '1',
 ];
+$siteDescription = $pdo ? get_setting($pdo, 'site_description', 'Forum communautaire.') : 'Forum communautaire.';
+$canonical = $baseUrl ?: '';
 ?>
 <!doctype html>
 <html lang="fr" data-bs-theme="<?php echo e($theme); ?>">
@@ -33,9 +37,21 @@ $themeVars = [
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><?php echo e($appName); ?></title>
+    <meta name="description" content="<?php echo e($siteDescription); ?>">
+    <?php if ($canonical): ?>
+        <link rel="canonical" href="<?php echo e($canonical); ?>">
+    <?php endif; ?>
+    <meta property="og:title" content="<?php echo e($appName); ?>">
+    <meta property="og:description" content="<?php echo e($siteDescription); ?>">
+    <?php if ($canonical): ?>
+        <meta property="og:url" content="<?php echo e($canonical); ?>">
+    <?php endif; ?>
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="<?php echo e($appName); ?>">
+    <meta name="twitter:description" content="<?php echo e($siteDescription); ?>">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
-    <link href="<?php echo asset('assets/style.css'); ?>" rel="stylesheet">
+    <link href="<?php echo asset('assets/style.css'); ?>?v=<?php echo e($themeVars['version']); ?>" rel="stylesheet">
     <style>
         :root {
             --brand: <?php echo e($themeVars['light_primary']); ?>;
@@ -62,7 +78,7 @@ $themeVars = [
     </style>
 </head>
 <body class="app-body d-flex flex-column min-vh-100">
-<nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
+<nav class="navbar navbar-expand-lg shadow-sm">
     <div class="container">
         <a class="navbar-brand fw-semibold" href="<?php echo e($baseUrl ?: 'index.php'); ?>">
             <i class="bi bi-chat-left-text me-2"></i><?php echo e($appName); ?>

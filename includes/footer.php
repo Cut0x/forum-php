@@ -1,6 +1,6 @@
 </main>
 <?php
-$footerText = 'Forum';
+$footerText = 'Forum PHP';
 $footerLink = '';
 $footerCategories = [];
 $footerLinks = [];
@@ -11,20 +11,20 @@ if ($pdo) {
     $footerLinks = $pdo->query('SELECT id, category_id, label, url FROM footer_links ORDER BY sort_order, label')->fetchAll();
 }
 ?>
-<footer class="mt-auto app-footer border-top py-4">
+<footer class="mt-auto app-footer py-5">
     <div class="container">
-        <div class="row g-4">
-            <div class="col-lg-4">
-                <div class="fw-semibold mb-2">
-                    <?php if ($footerLink): ?>
-                        <a class="text-decoration-none" href="<?php echo e($footerLink); ?>" target="_blank" rel="noopener"><?php echo e($footerText); ?></a>
-                    <?php else: ?>
-                        <?php echo e($footerText); ?>
-                    <?php endif; ?>
+        <div class="footer-slab">
+            <div class="footer-grid">
+                <div>
+                    <div class="footer-brand mb-2">
+                        <?php if ($footerLink): ?>
+                            <a class="text-decoration-none" href="<?php echo e($footerLink); ?>" target="_blank" rel="noopener"><?php echo e($footerText); ?></a>
+                        <?php else: ?>
+                            <?php echo e($footerText); ?>
+                        <?php endif; ?>
+                    </div>
+                    <div class="footer-tagline small">Communautes, discussions et ressources.</div>
                 </div>
-                <div class="text-muted small">Forum open-source.</div>
-            </div>
-            <div class="col-lg-8">
                 <div class="row g-3 footer-links">
                     <?php foreach ($footerCategories as $cat): ?>
                         <div class="col-6 col-md-3">
@@ -38,10 +38,10 @@ if ($pdo) {
                     <?php endforeach; ?>
                 </div>
             </div>
-        </div>
-        <div class="d-flex justify-content-between mt-4 small text-muted">
-            <span>&copy; 2026</span>
-            <span></span>
+            <div class="d-flex justify-content-between mt-4 small text-muted">
+                <span>&copy; <?php echo date('Y'); ?></span>
+                <span><a class="text-decoration-none" href="sitemap.php">Sitemap</a></span>
+            </div>
         </div>
     </div>
 </footer>

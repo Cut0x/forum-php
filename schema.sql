@@ -16,7 +16,8 @@ CREATE TABLE categories (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(80) NOT NULL,
     description VARCHAR(255) NOT NULL,
-    sort_order INT NOT NULL DEFAULT 0
+    sort_order INT NOT NULL DEFAULT 0,
+    is_readonly TINYINT NOT NULL DEFAULT 0
 );
 
 CREATE TABLE topics (

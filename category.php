@@ -8,7 +8,7 @@ $topics = [];
 
 require_db();
 if ($categoryId) {
-    $stmt = $pdo->prepare('SELECT id, name, description FROM categories WHERE id = ?');
+    $stmt = $pdo->prepare('SELECT id, name, description, is_readonly FROM categories WHERE id = ?');
     $stmt->execute([$categoryId]);
     $category = $stmt->fetch();
 
@@ -31,7 +31,11 @@ if (!$category) {
 <div class="card shadow-sm">
     <div class="card-header bg-white d-flex justify-content-between align-items-center">
         <strong>Sujets</strong>
-        <a class="btn btn-sm btn-primary" href="new-topic.php">Nouveau sujet</a>
+        <?php if (empty($category['is_readonly'])): ?>
+            <a class="btn btn-sm btn-primary" href="new-topic.php">Nouveau sujet</a>
+        <?php else: ?>
+            <span class="text-muted small">Lecture seule</span>
+        <?php endif; ?>
     </div>
     <div class="list-group list-group-flush">
         <?php foreach ($topics as $topic): ?>

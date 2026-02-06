@@ -85,6 +85,13 @@ function get_setting(PDO $pdo, string $key, ?string $default = null): ?string
     return $value !== false ? (string) $value : $default;
 }
 
+function column_exists(PDO $pdo, string $table, string $column): bool
+{
+    $stmt = $pdo->prepare('SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?');
+    $stmt->execute([$table, $column]);
+    return (int) $stmt->fetchColumn() > 0;
+}
+
 function db_error_message(): string
 {
     global $dbError;
@@ -95,10 +102,14 @@ function ensure_defaults(PDO $pdo): void
 {
     $count = (int) $pdo->query('SELECT COUNT(*) FROM categories')->fetchColumn();
     if ($count === 0) {
-        $stmt = $pdo->prepare('INSERT INTO categories (name, description, sort_order) VALUES (?, ?, ?)');
-        $stmt->execute(['Annonces', 'Nouveautes et mises a jour.', 1]);
+        $stmt = $pdo->prepare('INSERT INTO categories (name, description, sort_order, is_readonly) VALUES (?, ?, ?, ?)');
+        $stmt->execute(['Annonces', 'Nouveautes et mises a jour.', 1, 1]);
         $stmt->execute(['Support', 'Questions et aide technique.', 2]);
         $stmt->execute(['Discussions', 'Sujets libres.', 3]);
+    }
+    if (column_exists($pdo, 'categories', 'is_readonly')) {
+        $stmt = $pdo->prepare("UPDATE categories SET is_readonly = 1 WHERE name = 'Annonces'");
+        $stmt->execute();
     }
 
     $count = (int) $pdo->query('SELECT COUNT(*) FROM badges')->fetchColumn();
@@ -122,25 +133,7 @@ function ensure_defaults(PDO $pdo): void
         }
     }
 
-    $defaults = [
-        'footer_text' => 'Forum',
-        'footer_link' => '',
-        'stripe_enabled' => '0',
-        'stripe_url' => '',
-        'theme_light_bg' => '#f1f5f9',
-        'theme_light_surface' => '#ffffff',
-        'theme_light_text' => '#0f172a',
-        'theme_light_muted' => '#64748b',
-        'theme_light_primary' => '#4f8cff',
-        'theme_light_accent' => '#00d1b2',
-        'theme_dark_bg' => '#0b1220',
-        'theme_dark_surface' => '#0f172a',
-        'theme_dark_text' => '#e2e8f0',
-        'theme_dark_muted' => '#94a3b8',
-        'theme_dark_primary' => '#4f8cff',
-        'theme_dark_accent' => '#00d1b2',
-        'theme_font' => '\"Space Grotesk\", system-ui, -apple-system, Segoe UI, sans-serif',
-    ];
+    $defaults = default_settings();
     foreach ($defaults as $key => $value) {
         if (get_setting($pdo, $key) === null) {
             set_setting($pdo, $key, $value);
@@ -171,6 +164,83 @@ function ensure_defaults(PDO $pdo): void
             $stmt->execute([$catMap['Ressources'], 'GitHub', 'https://github.com/', 2]);
         }
     }
+}
+
+function default_settings(): array
+{
+    return [
+        'site_title' => 'Forum PHP',
+        'site_description' => 'Forum communautaire.',
+        'footer_text' => 'Forum PHP',
+        'footer_link' => '',
+        'stripe_enabled' => '0',
+        'stripe_url' => '',
+        'theme_light_bg' => '#f6f4ef',
+        'theme_light_surface' => '#ffffff',
+        'theme_light_text' => '#1f2937',
+        'theme_light_muted' => '#6b7280',
+        'theme_light_primary' => '#d97706',
+        'theme_light_accent' => '#0f766e',
+        'theme_dark_bg' => '#0e1111',
+        'theme_dark_surface' => '#151a1b',
+        'theme_dark_text' => '#e5e7eb',
+        'theme_dark_muted' => '#9ca3af',
+        'theme_dark_primary' => '#f59e0b',
+        'theme_dark_accent' => '#14b8a6',
+        'theme_font' => '\"Inter\", system-ui, sans-serif',
+        'theme_version' => '1',
+    ];
+}
+
+function theme_presets(): array
+{
+    return [
+        'amber_teal' => [
+            'theme_light_bg' => '#f6f4ef',
+            'theme_light_surface' => '#ffffff',
+            'theme_light_text' => '#1f2937',
+            'theme_light_muted' => '#6b7280',
+            'theme_light_primary' => '#d97706',
+            'theme_light_accent' => '#0f766e',
+            'theme_dark_bg' => '#0e1111',
+            'theme_dark_surface' => '#151a1b',
+            'theme_dark_text' => '#e5e7eb',
+            'theme_dark_muted' => '#9ca3af',
+            'theme_dark_primary' => '#f59e0b',
+            'theme_dark_accent' => '#14b8a6',
+            'theme_font' => '\"Inter\", system-ui, sans-serif',
+        ],
+        'slate_mint' => [
+            'theme_light_bg' => '#f3f4f6',
+            'theme_light_surface' => '#ffffff',
+            'theme_light_text' => '#111827',
+            'theme_light_muted' => '#6b7280',
+            'theme_light_primary' => '#334155',
+            'theme_light_accent' => '#10b981',
+            'theme_dark_bg' => '#0b1220',
+            'theme_dark_surface' => '#111827',
+            'theme_dark_text' => '#e5e7eb',
+            'theme_dark_muted' => '#9ca3af',
+            'theme_dark_primary' => '#475569',
+            'theme_dark_accent' => '#34d399',
+            'theme_font' => '\"Inter\", system-ui, sans-serif',
+        ],
+        'sand_rose' => [
+            'theme_light_bg' => '#f8f5f0',
+            'theme_light_surface' => '#ffffff',
+            'theme_light_text' => '#292524',
+            'theme_light_muted' => '#78716c',
+            'theme_light_primary' => '#ea580c',
+            'theme_light_accent' => '#be185d',
+            'theme_dark_bg' => '#140f10',
+            'theme_dark_surface' => '#1f1618',
+            'theme_dark_text' => '#f3f4f6',
+            'theme_dark_muted' => '#a8a29e',
+            'theme_dark_primary' => '#fb7185',
+            'theme_dark_accent' => '#f472b6',
+            'theme_font' => '\"Inter\", system-ui, sans-serif',
+        ],
+    ];
 }
 
 function require_db(): void

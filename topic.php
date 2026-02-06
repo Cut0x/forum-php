@@ -130,7 +130,7 @@ $topic = null;
 $posts = [];
 
 if ($topicId) {
-    $stmt = $pdo->prepare('SELECT t.id, t.title, t.created_at, t.edited_at, t.locked_at, t.deleted_at, u.username, u.role, u.id AS user_id FROM topics t JOIN users u ON u.id = t.user_id WHERE t.id = ?');
+    $stmt = $pdo->prepare('SELECT t.id, t.title, t.created_at, t.edited_at, t.locked_at, t.deleted_at, c.is_readonly, u.username, u.role, u.id AS user_id FROM topics t JOIN users u ON u.id = t.user_id JOIN categories c ON c.id = t.category_id WHERE t.id = ?');
     $stmt->execute([$topicId]);
     $topic = $stmt->fetch();
 
@@ -255,8 +255,8 @@ if (!$topic) {
 <div class="card shadow-sm mt-4">
     <div class="card-header bg-white">Repondre</div>
     <div class="card-body">
-        <?php if (!empty($topic['deleted_at']) || !empty($topic['locked_at'])): ?>
-            <div class="alert alert-secondary mb-0">Sujet ferme.</div>
+    <?php if (!empty($topic['deleted_at']) || !empty($topic['locked_at']) || (!empty($topic['is_readonly']) && !is_admin())): ?>
+        <div class="alert alert-secondary mb-0">Sujet ferme.</div>
         <?php elseif (!is_logged_in()): ?>
             <div class="alert alert-warning mb-0">Connectez-vous pour repondre.</div>
         <?php else: ?>

@@ -9,7 +9,7 @@ if (!is_logged_in()) {
 $categories = [];
 require __DIR__ . '/includes/header.php';
 require_db();
-$categories = $pdo->query('SELECT id, name FROM categories ORDER BY sort_order, name')->fetchAll();
+$categories = $pdo->query('SELECT id, name, is_readonly FROM categories ORDER BY sort_order, name')->fetchAll();
 
 $error = '';
 
@@ -19,14 +19,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $categoryId = (int) ($_POST['category_id'] ?? 0);
 
     if ($title && $content && $categoryId) {
-        $stmt = $pdo->prepare('INSERT INTO topics (category_id, user_id, title) VALUES (?, ?, ?)');
-        $stmt->execute([$categoryId, current_user_id(), $title]);
-        $topicId = (int) $pdo->lastInsertId();
+        $stmt = $pdo->prepare('SELECT is_readonly FROM categories WHERE id = ?');
+        $stmt->execute([$categoryId]);
+        $readonly = (int) $stmt->fetchColumn();
+        if ($readonly === 1 && !is_admin()) {
+            $error = 'Categorie en lecture seule.';
+        } else {
+            $stmt = $pdo->prepare('INSERT INTO topics (category_id, user_id, title) VALUES (?, ?, ?)');
+            $stmt->execute([$categoryId, current_user_id(), $title]);
+            $topicId = (int) $pdo->lastInsertId();
 
-        $stmt = $pdo->prepare('INSERT INTO posts (topic_id, user_id, content) VALUES (?, ?, ?)');
-        $stmt->execute([$topicId, current_user_id(), $content]);
-        $postId = (int) $pdo->lastInsertId();
-        award_badges($pdo, current_user_id());
+            $stmt = $pdo->prepare('INSERT INTO posts (topic_id, user_id, content) VALUES (?, ?, ?)');
+            $stmt->execute([$topicId, current_user_id(), $content]);
+            $postId = (int) $pdo->lastInsertId();
+            award_badges($pdo, current_user_id());
 
         foreach (parse_mentions($content) as $mention) {
             $stmt = $pdo->prepare('SELECT id FROM users WHERE username = ?');
@@ -37,8 +43,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
-        header('Location: topic.php?id=' . $topicId);
-        exit;
+            header('Location: topic.php?id=' . $topicId);
+            exit;
+        }
     }
 
     $error = 'Champs manquants.';
@@ -58,7 +65,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <select class="form-select" name="category_id" required>
                             <option value="">Selectionner...</option>
                             <?php foreach ($categories as $category): ?>
-                                <option value="<?php echo e((string) $category['id']); ?>"><?php echo e($category['name']); ?></option>
+                                <option value="<?php echo e((string) $category['id']); ?>" <?php echo !empty($category['is_readonly']) && !is_admin() ? 'disabled' : ''; ?>>
+                                    <?php echo e($category['name']); ?><?php echo !empty($category['is_readonly']) ? ' (lecture seule)' : ''; ?>
+                                </option>
                             <?php endforeach; ?>
                         </select>
                     </div>

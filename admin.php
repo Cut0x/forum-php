@@ -82,7 +82,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if ($action === 'settings') {
-        set_setting($pdo, 'footer_text', trim($_POST['footer_text'] ?? 'Forum'));
+        set_setting($pdo, 'site_title', trim($_POST['site_title'] ?? 'Forum PHP'));
+        set_setting($pdo, 'site_description', trim($_POST['site_description'] ?? 'Forum communautaire.'));
+        set_setting($pdo, 'footer_text', trim($_POST['footer_text'] ?? 'Forum PHP'));
         set_setting($pdo, 'footer_link', trim($_POST['footer_link'] ?? ''));
         set_setting($pdo, 'stripe_enabled', isset($_POST['stripe_enabled']) ? '1' : '0');
         set_setting($pdo, 'stripe_url', trim($_POST['stripe_url'] ?? ''));
@@ -100,13 +102,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 set_setting($pdo, $key, trim($_POST[$key]));
             }
         }
+        set_setting($pdo, 'theme_version', (string) time());
         $message = 'Theme mis a jour.';
+    }
+
+    if ($action === 'theme_preset') {
+        $preset = $_POST['preset'] ?? '';
+        $presets = theme_presets();
+        if (isset($presets[$preset])) {
+            foreach ($presets[$preset] as $key => $value) {
+                set_setting($pdo, $key, $value);
+            }
+            set_setting($pdo, 'theme_version', (string) time());
+            $message = 'Preset applique.';
+        }
+    }
+
+    if ($action === 'theme_reset') {
+        $defaults = default_settings();
+        foreach ($defaults as $key => $value) {
+            if (str_starts_with($key, 'theme_')) {
+                set_setting($pdo, $key, $value);
+            }
+        }
+        set_setting($pdo, 'theme_version', (string) time());
+        $message = 'Theme reinitialise.';
     }
 }
 
 $users = $pdo->query('SELECT id, username, role FROM users ORDER BY username')->fetchAll();
 $badges = $pdo->query('SELECT id, name, code, icon, color FROM badges ORDER BY name')->fetchAll();
-$footerText = get_setting($pdo, 'footer_text', 'Forum');
+$siteTitle = get_setting($pdo, 'site_title', 'Forum PHP');
+$siteDescription = get_setting($pdo, 'site_description', 'Forum communautaire.');
+$footerText = get_setting($pdo, 'footer_text', 'Forum PHP');
 $footerLink = get_setting($pdo, 'footer_link', '');
 $stripeEnabled = get_setting($pdo, 'stripe_enabled', '0');
 $stripeUrl = get_setting($pdo, 'stripe_url', '');
@@ -148,6 +176,27 @@ $theme = [
         <section id="section-theme" class="card admin-card shadow-sm mb-4">
             <div class="card-header bg-white">Theme</div>
             <div class="card-body">
+                <div class="d-flex flex-wrap gap-2 mb-3">
+                    <form method="post">
+                        <input type="hidden" name="action" value="theme_preset">
+                        <input type="hidden" name="preset" value="amber_teal">
+                        <button class="btn btn-outline-primary" type="submit">Amber / Teal</button>
+                    </form>
+                    <form method="post">
+                        <input type="hidden" name="action" value="theme_preset">
+                        <input type="hidden" name="preset" value="slate_mint">
+                        <button class="btn btn-outline-primary" type="submit">Slate / Mint</button>
+                    </form>
+                    <form method="post">
+                        <input type="hidden" name="action" value="theme_preset">
+                        <input type="hidden" name="preset" value="sand_rose">
+                        <button class="btn btn-outline-primary" type="submit">Sand / Rose</button>
+                    </form>
+                    <form method="post" class="ms-auto">
+                        <input type="hidden" name="action" value="theme_reset">
+                        <button class="btn btn-outline-secondary" type="submit">Reset</button>
+                    </form>
+                </div>
                 <form method="post">
                     <input type="hidden" name="action" value="theme">
                     <div class="row g-3">
@@ -197,6 +246,14 @@ $theme = [
                 <form method="post">
                     <input type="hidden" name="action" value="settings">
                     <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Titre du site</label>
+                            <input class="form-control" name="site_title" value="<?php echo e($siteTitle); ?>">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Description</label>
+                            <input class="form-control" name="site_description" value="<?php echo e($siteDescription); ?>">
+                        </div>
                         <div class="col-md-6">
                             <label class="form-label">Footer texte</label>
                             <input class="form-control" name="footer_text" value="<?php echo e($footerText); ?>">
