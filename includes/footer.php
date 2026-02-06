@@ -21,6 +21,14 @@ $emotesJson = json_encode($emotesData, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_A
 if ($emotesJson === false) {
     $emotesJson = '[]';
 }
+$emotesData = [];
+if ($pdo) {
+    try {
+        $emotesData = $pdo->query('SELECT name, file, title FROM emotes WHERE is_enabled = 1 ORDER BY name')->fetchAll();
+    } catch (Throwable $e) {
+        $emotesData = [];
+    }
+}
 ?>
 <footer class="mt-auto app-footer py-5">
     <div class="container">

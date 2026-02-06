@@ -11,6 +11,76 @@ require_db();
 
 $message = '';
 
+function handle_emote_upload(string $inputName, string $targetDir, ?string &$error): ?string
+{
+    if (!isset($_FILES[$inputName]) || !is_array($_FILES[$inputName])) {
+        return null;
+    }
+
+    $file = $_FILES[$inputName];
+    if (($file['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) {
+        return null;
+    }
+
+    $err = (int) ($file['error'] ?? UPLOAD_ERR_OK);
+    if ($err !== UPLOAD_ERR_OK) {
+        $error = match ($err) {
+            UPLOAD_ERR_INI_SIZE => 'Upload échoué: fichier trop volumineux (upload_max_filesize).',
+            UPLOAD_ERR_FORM_SIZE => 'Upload échoué: fichier trop volumineux (MAX_FILE_SIZE).',
+            UPLOAD_ERR_PARTIAL => 'Upload échoué: transfert partiel.',
+            UPLOAD_ERR_NO_TMP_DIR => 'Upload échoué: dossier temporaire manquant.',
+            UPLOAD_ERR_CANT_WRITE => 'Upload échoué: impossible d’écrire sur le disque.',
+            UPLOAD_ERR_EXTENSION => 'Upload échoué: extension PHP a arrêté le transfert.',
+            default => 'Upload échoué.',
+        };
+        return null;
+    }
+
+    $original = (string) ($file['name'] ?? '');
+    $ext = strtolower((string) pathinfo($original, PATHINFO_EXTENSION));
+    $allowed = ['png', 'jpg', 'jpeg', 'gif', 'webp'];
+    if (!in_array($ext, $allowed, true)) {
+        $error = 'Format invalide (png, jpg, jpeg, gif, webp).';
+        return null;
+    }
+
+    $base = (string) pathinfo($original, PATHINFO_FILENAME);
+    $base = preg_replace('/[^a-zA-Z0-9._-]/', '_', $base);
+    $base = trim($base, '._-');
+    if ($base === '') {
+        $error = 'Nom de fichier invalide.';
+        return null;
+    }
+
+    if (!is_dir($targetDir)) {
+        mkdir($targetDir, 0777, true);
+    }
+
+    if (!is_writable($targetDir)) {
+        $error = 'Upload échoué: dossier assets/emotes non accessible en écriture.';
+        return null;
+    }
+
+    $filename = $base . '.' . $ext;
+    $i = 1;
+    while (file_exists($targetDir . '/' . $filename)) {
+        $filename = $base . '-' . $i . '.' . $ext;
+        $i++;
+    }
+
+    if (!is_uploaded_file($file['tmp_name'] ?? '')) {
+        $error = 'Upload échoué: fichier temporaire invalide.';
+        return null;
+    }
+
+    if (!move_uploaded_file($file['tmp_name'], $targetDir . '/' . $filename)) {
+        $error = 'Impossible de déplacer le fichier (vérifiez les permissions du dossier).';
+        return null;
+    }
+
+    return $filename;
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
 
@@ -48,6 +118,68 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt = $pdo->prepare('INSERT INTO badges (name, code, icon, color) VALUES (?, ?, ?, ?)');
             $stmt->execute([$name, $code, $icon, $color]);
             $message = 'Badge créé.';
+        }
+    }
+
+    if ($action === 'emote_add') {
+        $name = trim($_POST['name'] ?? '');
+        $file = basename(trim($_POST['file'] ?? ''));
+        $title = trim($_POST['title'] ?? '');
+        $enabled = isset($_POST['is_enabled']) ? 1 : 0;
+        $uploadError = null;
+        $uploaded = handle_emote_upload('emote_upload', __DIR__ . '/assets/emotes', $uploadError);
+        if ($uploadError) {
+            $message = $uploadError;
+        } else {
+            if ($uploaded) {
+                $file = $uploaded;
+            }
+            $ext = strtolower((string) pathinfo($file, PATHINFO_EXTENSION));
+            $allowed = ['png', 'jpg', 'jpeg', 'gif', 'webp'];
+            $validFile = $file && in_array($ext, $allowed, true);
+            if ($name && $validFile && preg_match('/^[a-zA-Z0-9_+-]{2,50}$/', $name)) {
+            $stmt = $pdo->prepare('INSERT INTO emotes (name, file, title, is_enabled) VALUES (?, ?, ?, ?)');
+            $stmt->execute([$name, $file, $title ?: null, $enabled]);
+            $message = 'Émote ajoutée.';
+            } else {
+                $message = 'Nom ou fichier invalide.';
+            }
+        }
+    }
+
+    if ($action === 'emote_update') {
+        $id = (int) ($_POST['id'] ?? 0);
+        $name = trim($_POST['name'] ?? '');
+        $file = basename(trim($_POST['file'] ?? ''));
+        $title = trim($_POST['title'] ?? '');
+        $enabled = isset($_POST['is_enabled']) ? 1 : 0;
+        $uploadError = null;
+        $uploaded = handle_emote_upload('emote_upload', __DIR__ . '/assets/emotes', $uploadError);
+        if ($uploadError) {
+            $message = $uploadError;
+        } else {
+            if ($uploaded) {
+                $file = $uploaded;
+            }
+            $ext = strtolower((string) pathinfo($file, PATHINFO_EXTENSION));
+            $allowed = ['png', 'jpg', 'jpeg', 'gif', 'webp'];
+            $validFile = $file && in_array($ext, $allowed, true);
+            if ($id && $name && $validFile && preg_match('/^[a-zA-Z0-9_+-]{2,50}$/', $name)) {
+                $stmt = $pdo->prepare('UPDATE emotes SET name = ?, file = ?, title = ?, is_enabled = ? WHERE id = ?');
+                $stmt->execute([$name, $file, $title ?: null, $enabled, $id]);
+                $message = 'Émote mise à jour.';
+            } else {
+                $message = 'Émote invalide.';
+            }
+        }
+    }
+
+    if ($action === 'emote_delete') {
+        $id = (int) ($_POST['id'] ?? 0);
+        if ($id) {
+            $stmt = $pdo->prepare('DELETE FROM emotes WHERE id = ?');
+            $stmt->execute([$id]);
+            $message = 'Émote supprimée.';
         }
     }
 
@@ -175,6 +307,11 @@ $stripeUrl = get_setting($pdo, 'stripe_url', '');
 $footerCategories = $pdo->query('SELECT id, name FROM footer_categories ORDER BY sort_order, name')->fetchAll();
 $footerLinks = $pdo->query('SELECT id, category_id, label, url FROM footer_links ORDER BY sort_order, label')->fetchAll();
 $categories = $pdo->query('SELECT id, name, description, is_readonly, is_pinned FROM categories ORDER BY is_pinned DESC, sort_order, name')->fetchAll();
+try {
+    $emotes = $pdo->query('SELECT id, name, file, title, is_enabled FROM emotes ORDER BY name')->fetchAll();
+} catch (Throwable $e) {
+    $emotes = [];
+}
 $theme = [
     'theme_light_bg' => get_setting($pdo, 'theme_light_bg', '#f1f5f9'),
     'theme_light_surface' => get_setting($pdo, 'theme_light_surface', '#ffffff'),
@@ -201,6 +338,7 @@ $theme = [
                 <a class="nav-link" href="#section-categories">Catégories</a>
                 <a class="nav-link" href="#section-footer">Footer</a>
                 <a class="nav-link" href="#section-badges">Badges</a>
+                <a class="nav-link" href="#section-emotes">Émotes</a>
                 <a class="nav-link" href="#section-users">Utilisateurs</a>
             </nav>
             <?php if ($message): ?>
@@ -494,6 +632,92 @@ $theme = [
                             <div>
                                 <div class="fw-semibold"><?php echo e($badge['name']); ?></div>
                                 <small class="text-muted"><?php echo e($badge['code']); ?></small>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+        </section>
+
+        <section id="section-emotes" class="card admin-card shadow-sm mb-4">
+            <div class="card-header bg-white">Émotes</div>
+            <div class="card-body">
+                <form method="post" class="mb-4" enctype="multipart/form-data">
+                    <input type="hidden" name="action" value="emote_add">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label">Nom</label>
+                            <input class="form-control" name="name" placeholder="smile" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Fichier</label>
+                            <input class="form-control" name="file" placeholder="smile.png">
+                            <div class="form-text">Images dans assets/emotes</div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Upload</label>
+                            <input class="form-control" type="file" name="emote_upload" accept="image/png,image/jpeg,image/gif,image/webp">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Titre</label>
+                            <input class="form-control" name="title" placeholder="Sourire">
+                        </div>
+                        <div class="col-md-1 d-flex align-items-end">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="is_enabled" id="emote_enabled_new" checked>
+                                <label class="form-check-label" for="emote_enabled_new">Actif</label>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary mt-3" type="submit">Ajouter</button>
+                </form>
+
+                <div class="row g-3">
+                    <?php foreach ($emotes as $emote): ?>
+                        <div class="col-md-6">
+                            <div class="border rounded p-3 emote-card <?php echo empty($emote['is_enabled']) ? 'emote-disabled' : ''; ?>">
+                                <div class="d-flex justify-content-between align-items-start gap-3">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <img class="emote" src="<?php echo e('assets/emotes/' . $emote['file']); ?>" alt="emote">
+                                        <div>
+                                            <div class="fw-semibold">:<?php echo e($emote['name']); ?>:</div>
+                                            <small class="text-muted"><?php echo e($emote['file']); ?></small>
+                                            <?php if (empty($emote['is_enabled'])): ?>
+                                                <span class="badge bg-secondary ms-2">Désactivée</span>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+                                    <form method="post">
+                                        <input type="hidden" name="action" value="emote_delete">
+                                        <input type="hidden" name="id" value="<?php echo e((string) $emote['id']); ?>">
+                                        <button class="btn btn-sm btn-outline-danger" type="submit">Supprimer</button>
+                                    </form>
+                                </div>
+                                <form method="post" class="mt-3" enctype="multipart/form-data">
+                                    <input type="hidden" name="action" value="emote_update">
+                                    <input type="hidden" name="id" value="<?php echo e((string) $emote['id']); ?>">
+                                    <div class="row g-2">
+                                        <div class="col-md-3">
+                                            <input class="form-control" name="name" value="<?php echo e($emote['name']); ?>">
+                                        </div>
+                                        <div class="col-md-4">
+                                            <input class="form-control" name="file" value="<?php echo e($emote['file']); ?>">
+                                        </div>
+                                        <div class="col-md-4">
+                                            <input class="form-control" type="file" name="emote_upload" accept="image/png,image/jpeg,image/gif,image/webp">
+                                        </div>
+                                        <div class="col-md-4">
+                                            <input class="form-control" name="title" value="<?php echo e($emote['title'] ?? ''); ?>">
+                                        </div>
+                                        <div class="col-md-1 d-flex align-items-center">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" name="is_enabled" id="emote_enabled_<?php echo e((string) $emote['id']); ?>" <?php echo !empty($emote['is_enabled']) ? 'checked' : ''; ?>>
+                                                <label class="form-check-label" for="emote_enabled_<?php echo e((string) $emote['id']); ?>">Actif</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <button class="btn btn-outline-primary btn-sm mt-2" type="submit">Enregistrer</button>
+                                </form>
                             </div>
                         </div>
                     <?php endforeach; ?>

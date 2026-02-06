@@ -241,7 +241,7 @@ if (!$topic) {
                             <form method="post">
                                 <input type="hidden" name="action" value="edit">
                                 <input type="hidden" name="post_id" value="<?php echo e((string) $post['id']); ?>">
-                                <textarea class="form-control" name="content" rows="4" data-mentions="1"><?php echo e($post['content']); ?></textarea>
+                                <textarea class="form-control" name="content" rows="4" data-mentions="1" data-emotes="1"><?php echo e($post['content']); ?></textarea>
                                 <button class="btn btn-primary btn-sm mt-2" type="submit">Enregistrer</button>
                             </form>
                         </div>
@@ -263,7 +263,7 @@ if (!$topic) {
             <form method="post">
                 <input type="hidden" name="action" value="reply">
                 <div class="mb-3">
-                <textarea class="form-control" name="content" rows="4" placeholder="Votre message..." data-mentions="1"></textarea>
+                <textarea class="form-control" name="content" rows="4" placeholder="Votre message..." data-mentions="1" data-emotes="1"></textarea>
                 </div>
                 <button type="submit" class="btn btn-primary">Poster</button>
             </form>
