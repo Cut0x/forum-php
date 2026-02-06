@@ -11,7 +11,12 @@ $categories = $pdo->query('SELECT id, name, description, is_pinned FROM categori
         <div class="col-md-6">
             <div class="card shadow-sm card-category h-100">
                 <div class="card-body">
-                    <h5 class="card-title"><?php echo e($category['name']); ?></h5>
+                    <h5 class="card-title">
+                        <?php echo e($category['name']); ?>
+                        <?php if (!empty($category['is_pinned'])): ?>
+                            <i class="bi bi-pin-angle-fill text-warning ms-1" title="Épinglée"></i>
+                        <?php endif; ?>
+                    </h5>
                     <p class="text-muted mb-3"><?php echo e($category['description']); ?></p>
                     <a href="category.php?id=<?php echo e((string) $category['id']); ?>" class="btn btn-sm btn-outline-primary">Voir les sujets</a>
                 </div>

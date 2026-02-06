@@ -8,7 +8,7 @@ $topics = [];
 
 require_db();
 if ($categoryId) {
-    $stmt = $pdo->prepare('SELECT id, name, description, is_readonly FROM categories WHERE id = ?');
+    $stmt = $pdo->prepare('SELECT id, name, description, is_readonly, is_pinned FROM categories WHERE id = ?');
     $stmt->execute([$categoryId]);
     $category = $stmt->fetch();
 
@@ -24,7 +24,12 @@ if (!$category) {
 }
 ?>
 <section class="mb-4">
-    <h1 class="h4 mb-1"><?php echo e($category['name']); ?></h1>
+    <h1 class="h4 mb-1">
+        <?php echo e($category['name']); ?>
+        <?php if (!empty($category['is_pinned'])): ?>
+            <i class="bi bi-pin-angle-fill text-warning ms-1" title="Épinglée"></i>
+        <?php endif; ?>
+    </h1>
     <p class="text-muted"><?php echo e($category['description']); ?></p>
 </section>
 
