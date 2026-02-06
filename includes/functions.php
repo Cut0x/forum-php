@@ -104,8 +104,8 @@ function ensure_defaults(PDO $pdo): void
     if ($count === 0) {
         $stmt = $pdo->prepare('INSERT INTO categories (name, description, sort_order, is_readonly) VALUES (?, ?, ?, ?)');
         $stmt->execute(['Annonces', 'Nouveautés et mises à jour.', 1, 1]);
-        $stmt->execute(['Support', 'Questions et aide technique.', 2]);
-        $stmt->execute(['Discussions', 'Sujets libres.', 3]);
+        $stmt->execute(['Support', 'Questions et aide technique.', 2, 0]);
+        $stmt->execute(['Discussions', 'Sujets libres.', 3, 0]);
     }
     if (column_exists($pdo, 'categories', 'is_readonly')) {
         $stmt = $pdo->prepare("UPDATE categories SET is_readonly = 1 WHERE name = 'Annonces'");
