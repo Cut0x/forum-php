@@ -5,6 +5,10 @@ if (isset($_GET['id'])) {
     $userId = (int) $_GET['id'];
 } else {
     $userId = is_logged_in() ? current_user_id() : 0;
+    if (!$userId) {
+        header('Location: index.php');
+        exit;
+    }
 }
 
 $canEdit = is_logged_in() && $userId === current_user_id();
@@ -341,40 +345,38 @@ $bioHtml = apply_emotes_to_html($pdo, nl2br(e($user['bio'] ?? '')));
     </div>
 </div>
 
-<?php if ($canEdit): ?>
-    <div class="row g-3 mt-1">
-        <div class="col-lg-6">
-            <div class="card shadow-sm">
-            <div class="card-header bg-white">Activité récente</div>
-                <div class="list-group list-group-flush">
-                    <?php foreach ($recentTopics as $topic): ?>
-                        <a class="list-group-item list-group-item-action" href="topic.php?id=<?php echo e((string) $topic['id']); ?>">
-                            <div class="d-flex justify-content-between">
-                                <span><?php echo e($topic['title']); ?></span>
-                                <small class="text-muted"><?php echo e(format_date($topic['created_at'])); ?></small>
-                            </div>
-                        </a>
-                    <?php endforeach; ?>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-6">
-            <div class="card shadow-sm">
-                <div class="card-header bg-white">Derniers messages</div>
-                <div class="list-group list-group-flush">
-                    <?php foreach ($recentPosts as $post): ?>
-                        <a class="list-group-item list-group-item-action" href="topic.php?id=<?php echo e((string) $post['topic_id']); ?>">
-                            <div class="d-flex justify-content-between">
-                                <span><?php echo e($post['topic_title']); ?></span>
-                                <small class="text-muted"><?php echo e(format_date($post['created_at'])); ?></small>
-                            </div>
-                        </a>
-                    <?php endforeach; ?>
-                </div>
+<div class="row g-3 mt-1">
+    <div class="col-lg-6">
+        <div class="card shadow-sm">
+        <div class="card-header bg-white">Activité récente</div>
+            <div class="list-group list-group-flush">
+                <?php foreach ($recentTopics as $topic): ?>
+                    <a class="list-group-item list-group-item-action" href="topic.php?id=<?php echo e((string) $topic['id']); ?>">
+                        <div class="d-flex justify-content-between">
+                            <span><?php echo e($topic['title']); ?></span>
+                            <small class="text-muted"><?php echo e(format_date($topic['created_at'])); ?></small>
+                        </div>
+                    </a>
+                <?php endforeach; ?>
             </div>
         </div>
     </div>
-<?php endif; ?>
+    <div class="col-lg-6">
+        <div class="card shadow-sm">
+            <div class="card-header bg-white">Derniers messages</div>
+            <div class="list-group list-group-flush">
+                <?php foreach ($recentPosts as $post): ?>
+                    <a class="list-group-item list-group-item-action" href="topic.php?id=<?php echo e((string) $post['topic_id']); ?>">
+                        <div class="d-flex justify-content-between">
+                            <span><?php echo e($post['topic_title']); ?></span>
+                            <small class="text-muted"><?php echo e(format_date($post['created_at'])); ?></small>
+                        </div>
+                    </a>
+                <?php endforeach; ?>
+            </div>
+        </div>
+    </div>
+</div>
 
 <div class="card shadow-sm mt-4">
     <div class="card-header bg-white d-flex justify-content-between align-items-center">
