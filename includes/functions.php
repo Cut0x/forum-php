@@ -578,6 +578,15 @@ function send_mail(string $to, string $subject, string $html): bool
     }
 
     try {
+        $from = $_ENV['SMTP_FROM'] ?? 'no-reply@example.com';
+        $fromName = $_ENV['MAIL_FROM_NAME'] ?? 'Forum';
+        $replyTo = $_ENV['MAIL_REPLY_TO'] ?? $from;
+
+        $plain = trim(preg_replace('/\s+/', ' ', strip_tags($html)));
+        if ($plain === '') {
+            $plain = 'Consultez votre compte pour plus de détails.';
+        }
+
         $mail = new PHPMailer\PHPMailer\PHPMailer(true);
         $mail->isSMTP();
         $mail->Host = $_ENV['SMTP_HOST'] ?? 'localhost';
@@ -586,11 +595,14 @@ function send_mail(string $to, string $subject, string $html): bool
         $mail->Password = $_ENV['SMTP_PASS'] ?? '';
         $mail->SMTPSecure = PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
         $mail->Port = (int) ($_ENV['SMTP_PORT'] ?? 587);
-        $mail->setFrom($_ENV['SMTP_FROM'] ?? 'no-reply@example.com', 'Forum');
+        $mail->setFrom($from, $fromName);
+        $mail->addReplyTo($replyTo, $fromName);
         $mail->addAddress($to);
         $mail->isHTML(true);
         $mail->Subject = $subject;
         $mail->Body = $html;
+        $mail->AltBody = $plain;
+        $mail->XMailer = 'Forum PHP';
         $mail->send();
         return true;
     } catch (Throwable $e) {
