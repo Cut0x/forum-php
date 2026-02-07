@@ -594,6 +594,12 @@ function send_mail(string $to, string $subject, string $html): bool
         $mail->send();
         return true;
     } catch (Throwable $e) {
+        $logDir = __DIR__ . '/../logs';
+        if (!is_dir($logDir)) {
+            @mkdir($logDir, 0775, true);
+        }
+        $line = '[' . date('Y-m-d H:i:s') . '] MAIL ERROR: ' . $e->getMessage() . PHP_EOL;
+        @file_put_contents($logDir . '/mail.log', $line, FILE_APPEND);
         return false;
     }
 }
