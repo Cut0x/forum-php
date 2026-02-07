@@ -18,7 +18,12 @@ if (file_exists(__DIR__ . '/../vendor/autoload.php')) {
 session_start();
 
 if (!isset($_SESSION['theme'])) {
-    $_SESSION['theme'] = 'light';
+    $cookieTheme = $_COOKIE['theme'] ?? '';
+    if (in_array($cookieTheme, ['light', 'dark'], true)) {
+        $_SESSION['theme'] = $cookieTheme;
+    } else {
+        $_SESSION['theme'] = 'light';
+    }
 }
 
 if (is_array($config) && isset($config['mail'])) {
