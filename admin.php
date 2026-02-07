@@ -120,6 +120,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $message = 'Badge créé.';
         }
     }
+    
+    if ($action === 'badge_update') {
+        $badgeId = (int) ($_POST['badge_id'] ?? 0);
+        $name = trim($_POST['name'] ?? '');
+        $code = trim($_POST['code'] ?? '');
+        $icon = trim($_POST['icon'] ?? '');
+        $color = trim($_POST['color'] ?? '#0d6efd');
+        if ($badgeId && $name && $code && $icon) {
+            $stmt = $pdo->prepare('UPDATE badges SET name = ?, code = ?, icon = ?, color = ? WHERE id = ?');
+            $stmt->execute([$name, $code, $icon, $color, $badgeId]);
+            $message = 'Badge mis à jour.';
+        } else {
+            $message = 'Badge invalide.';
+        }
+    }
 
     if ($action === 'emote_add') {
         $name = trim($_POST['name'] ?? '');
@@ -625,14 +640,35 @@ $theme = [
                     </div>
                     <button class="btn btn-primary mt-3" type="submit">Ajouter</button>
                 </form>
-                <div class="d-flex flex-wrap gap-2">
+                <div class="d-flex flex-wrap gap-3">
                     <?php foreach ($badges as $badge): ?>
-                        <div class="d-flex align-items-center gap-2 border rounded px-2 py-1">
-                            <img class="badge-icon" src="<?php echo e($badge['icon']); ?>" alt="badge">
-                            <div>
-                                <div class="fw-semibold"><?php echo e($badge['name']); ?></div>
-                                <small class="text-muted"><?php echo e($badge['code']); ?></small>
+                        <div class="border rounded p-3">
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <img class="badge-icon" src="<?php echo e($badge['icon']); ?>" alt="badge">
+                                <div>
+                                    <div class="fw-semibold"><?php echo e($badge['name']); ?></div>
+                                    <small class="text-muted"><?php echo e($badge['code']); ?></small>
+                                </div>
                             </div>
+                            <form method="post">
+                                <input type="hidden" name="action" value="badge_update">
+                                <input type="hidden" name="badge_id" value="<?php echo e((string) $badge['id']); ?>">
+                                <div class="row g-2">
+                                    <div class="col-md-3">
+                                        <input class="form-control" name="name" value="<?php echo e($badge['name']); ?>">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <input class="form-control" name="code" value="<?php echo e($badge['code']); ?>">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <input class="form-control" name="icon" value="<?php echo e($badge['icon']); ?>">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <input class="form-control" name="color" value="<?php echo e($badge['color']); ?>">
+                                    </div>
+                                </div>
+                                <button class="btn btn-outline-primary btn-sm mt-2" type="submit">Enregistrer</button>
+                            </form>
                         </div>
                     <?php endforeach; ?>
                 </div>
