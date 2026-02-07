@@ -1,7 +1,11 @@
 <?php
 require __DIR__ . '/includes/bootstrap.php';
 
-if (!is_logged_in() || !is_admin()) {
+if (!is_logged_in()) {
+    header('Location: ' . login_redirect_target());
+    exit;
+}
+if (!is_admin()) {
     header('Location: index.php');
     exit;
 }

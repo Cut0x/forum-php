@@ -7,12 +7,14 @@ $displayName = current_user_name() ?? $username;
 $role = current_user_role();
 $theme = current_theme();
 $notifCount = 0;
+
 if ($pdo && $isLogged) {
     $stmt = $pdo->prepare('SELECT COUNT(*) FROM notifications WHERE user_id = ? AND is_read = 0');
     $stmt->execute([current_user_id()]);
     $notifCount = (int) $stmt->fetchColumn();
     $appName = get_setting($pdo, 'site_title', $appName) ?? $appName;
 }
+
 $themeVars = [
     'light_bg' => $pdo ? get_setting($pdo, 'theme_light_bg', '#f1f5f9') : '#f1f5f9',
     'light_surface' => $pdo ? get_setting($pdo, 'theme_light_surface', '#ffffff') : '#ffffff',
@@ -29,8 +31,20 @@ $themeVars = [
     'font' => $pdo ? get_setting($pdo, 'theme_font', '\"Inter\", system-ui, sans-serif') : '\"Inter\", system-ui, sans-serif',
     'version' => $pdo ? get_setting($pdo, 'theme_version', '1') : '1',
 ];
+
 $siteDescription = $pdo ? get_setting($pdo, 'site_description', 'Forum communautaire.') : 'Forum communautaire.';
 $canonical = $baseUrl ?: '';
+$requestUri = $_SERVER['REQUEST_URI'] ?? '';
+$redirectParam = sanitize_redirect($requestUri);
+$redirectPath = $redirectParam ? (parse_url($redirectParam, PHP_URL_PATH) ?? '') : '';
+$redirectBase = basename($redirectPath ?: '');
+
+if (in_array($redirectBase, ['login.php', 'register.php'], true)) {
+    $redirectParam = null;
+}
+
+$loginUrl = 'login.php' . ($redirectParam ? '?redirect=' . rawurlencode($redirectParam) : '');
+$registerUrl = 'register.php' . ($redirectParam ? '?redirect=' . rawurlencode($redirectParam) : '');
 ?>
 <!doctype html>
 <html lang="fr" data-bs-theme="<?php echo e($theme); ?>">
@@ -122,8 +136,8 @@ $canonical = $baseUrl ?: '';
                     <?php endif; ?>
                     <li class="nav-item"><a class="nav-link" href="logout.php">Déconnexion</a></li>
                 <?php else: ?>
-                    <li class="nav-item"><a class="nav-link" href="login.php">Connexion</a></li>
-                    <li class="nav-item"><a class="nav-link" href="register.php">Inscription</a></li>
+                    <li class="nav-item"><a class="nav-link" href="<?php echo e($loginUrl); ?>">Connexion</a></li>
+                    <li class="nav-item"><a class="nav-link" href="<?php echo e($registerUrl); ?>">Inscription</a></li>
                 <?php endif; ?>
             </ul>
         </div>

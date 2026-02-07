@@ -54,6 +54,37 @@ function asset(string $path): string
     return $path;
 }
 
+function sanitize_redirect(?string $value): ?string
+{
+    $value = trim((string) $value);
+    if ($value === '') {
+        return null;
+    }
+    if (preg_match("/[\r\n]/", $value)) {
+        return null;
+    }
+    if (str_starts_with($value, '\\') || str_starts_with($value, '//')) {
+        return null;
+    }
+    $parts = parse_url($value);
+    if ($parts === false) {
+        return null;
+    }
+    if (isset($parts['scheme']) || isset($parts['host'])) {
+        return null;
+    }
+    return $value;
+}
+
+function login_redirect_target(string $fallback = 'login.php'): string
+{
+    $redirect = sanitize_redirect($_SERVER['REQUEST_URI'] ?? '');
+    if ($redirect) {
+        return $fallback . '?redirect=' . rawurlencode($redirect);
+    }
+    return $fallback;
+}
+
 function current_user_id(): ?int
 {
     return $_SESSION['user_id'] ?? null;

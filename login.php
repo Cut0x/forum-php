@@ -1,8 +1,10 @@
 <?php
 require __DIR__ . '/includes/bootstrap.php';
 
+$redirect = sanitize_redirect($_GET['redirect'] ?? ($_POST['redirect'] ?? '')) ?? 'profile.php';
+
 if (is_logged_in()) {
-    header('Location: profile.php');
+    header('Location: ' . $redirect);
     exit;
 }
 
@@ -22,7 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $pdo) {
             $_SESSION['username'] = $user['username'];
             $_SESSION['name'] = $user['name'] ?? $user['username'];
             $_SESSION['role'] = $user['role'];
-            header('Location: profile.php');
+            header('Location: ' . $redirect);
             exit;
         }
     }
@@ -41,6 +43,9 @@ require __DIR__ . '/includes/header.php';
                     <div class="alert alert-danger py-2 mb-3"><?php echo e($error); ?></div>
                 <?php endif; ?>
                 <form method="post">
+                    <?php if ($redirect !== 'profile.php'): ?>
+                        <input type="hidden" name="redirect" value="<?php echo e($redirect); ?>">
+                    <?php endif; ?>
                     <div class="mb-3">
                         <label class="form-label">Email</label>
                         <input class="form-control" name="email" type="email" required>
