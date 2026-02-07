@@ -220,9 +220,12 @@ pre,
 }
 
 .image-modal-img {
-    width: 100%;
+    max-width: 92vw;
+    max-height: 80vh;
+    width: auto;
     height: auto;
     display: block;
+    margin: 0 auto;
 }
 
 .preview-box {
