@@ -478,7 +478,10 @@ function create_notification(PDO $pdo, int $userId, string $type, string $messag
         $stmt->execute([$userId]);
         $email = $stmt->fetchColumn();
         if ($email) {
-            send_mail($email, 'Notification', '<p>' . e($message) . '</p>');
+            $notifUrl = absolute_url('notifications.php');
+            $body = '<p>' . e($message) . '</p><p style="color:#6b7280;margin:0;">Consultez vos notifications pour plus de détails.</p>';
+            $html = mail_layout('Nouvelle notification', $body, 'Voir mes notifications', $notifUrl);
+            send_mail($email, 'Notification', $html);
         }
     }
 }
@@ -598,6 +601,46 @@ function send_mail(string $to, string $subject, string $html): bool
 function is_logged_in(): bool
 {
     return current_user_id() !== null;
+}
+
+function app_base_url(): string
+{
+    $base = trim((string) ($_ENV['APP_BASE_URL'] ?? ''));
+    return rtrim($base, '/');
+}
+
+function absolute_url(string $path): string
+{
+    if (preg_match('/^https?:\\/\\//i', $path)) {
+        return $path;
+    }
+    $base = app_base_url();
+    if ($base === '') {
+        return $path;
+    }
+    $path = '/' . ltrim($path, '/');
+    return $base . $path;
+}
+
+function mail_button(string $label, string $url): string
+{
+    $safeUrl = e($url);
+    $safeLabel = e($label);
+    return '<a href="' . $safeUrl . '" style="display:inline-block;padding:10px 16px;background:#0d6efd;color:#ffffff;text-decoration:none;border-radius:6px;font-weight:600;">' . $safeLabel . '</a>';
+}
+
+function mail_layout(string $title, string $body, ?string $buttonLabel = null, ?string $buttonUrl = null): string
+{
+    $safeTitle = e($title);
+    $button = '';
+    if ($buttonLabel && $buttonUrl) {
+        $button = '<div style="margin-top:16px;">' . mail_button($buttonLabel, $buttonUrl) . '</div>';
+    }
+    return '<div style="font-family:Arial,Helvetica,sans-serif;color:#111827;line-height:1.5;">'
+        . '<h2 style="margin:0 0 12px;font-size:20px;">' . $safeTitle . '</h2>'
+        . '<div>' . $body . '</div>'
+        . $button
+        . '</div>';
 }
 
 function role_badge_class(?string $role): string
