@@ -306,6 +306,7 @@ function apply_images_to_html(string $html): string
                 $img = $doc->createElement('img');
                 $img->setAttribute('src', $url);
                 $img->setAttribute('alt', $alt);
+                $img->setAttribute('class', 'post-image');
                 $fragment->appendChild($img);
                 $i++;
                 continue;
