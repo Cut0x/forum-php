@@ -57,7 +57,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $pdo) {
 
             $mailEnabled = ($_ENV['MAIL_ENABLED'] ?? '0') === '1';
             if ($mailEnabled) {
-                send_mail($email, 'Bienvenue', '<p>Merci pour votre inscription.</p>');
+                $profileUrl = absolute_url('profile.php');
+                $body = '<p>Merci pour votre inscription.</p><p style="color:#6b7280;margin:0;">Prenez un moment pour compléter votre profil (bio, avatar, liens).</p>';
+                $html = mail_layout('Bienvenue sur le forum', $body, 'Compléter mon profil', $profileUrl);
+                send_mail($email, 'Bienvenue', $html);
             }
             header('Location: ' . $redirect);
             exit;

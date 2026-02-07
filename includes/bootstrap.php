@@ -30,6 +30,10 @@ if (is_array($config) && isset($config['mail'])) {
     $_ENV['SMTP_FROM'] = $config['mail']['from'] ?? ($_ENV['SMTP_FROM'] ?? '');
 }
 
+if (is_array($config) && isset($config['app'])) {
+    $_ENV['APP_BASE_URL'] = $config['app']['base_url'] ?? '';
+}
+
 if (is_array($config) && isset($config['hcaptcha'])) {
     $_ENV['HCAPTCHA_ENABLED'] = !empty($config['hcaptcha']['enabled']) ? '1' : '0';
     $_ENV['HCAPTCHA_SITE'] = $config['hcaptcha']['site_key'] ?? '';

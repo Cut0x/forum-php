@@ -478,7 +478,14 @@ function create_notification(PDO $pdo, int $userId, string $type, string $messag
         $stmt->execute([$userId]);
         $email = $stmt->fetchColumn();
         if ($email) {
-            send_mail($email, 'Notification', '<p>' . e($message) . '</p>');
+            $notifUrl = absolute_url('notifications.php');
+            $siteTitle = get_setting($pdo, 'site_title', 'Forum PHP') ?? 'Forum PHP';
+            $fromName = 'Notification - ' . $siteTitle;
+            $subject = '[' . $siteTitle . '] Notification';
+            $body = '<p>' . e($message) . '</p>'
+                . '<p style="margin:0;">Lien direct : <a href="' . e($notifUrl) . '">' . e($notifUrl) . '</a></p>';
+            $html = mail_layout('Nouvelle notification', $body);
+            send_mail($email, $subject, $html, $fromName);
         }
     }
 }
@@ -568,13 +575,22 @@ function sync_role_badges(PDO $pdo, int $userId, ?string $role): void
     }
 }
 
-function send_mail(string $to, string $subject, string $html): bool
+function send_mail(string $to, string $subject, string $html, ?string $fromNameOverride = null): bool
 {
     if (!class_exists('\\PHPMailer\\PHPMailer\\PHPMailer')) {
         return false;
     }
 
     try {
+        $from = $_ENV['SMTP_FROM'] ?? 'no-reply@example.com';
+        $fromName = $fromNameOverride ?: ($_ENV['MAIL_FROM_NAME'] ?? 'Forum');
+        $replyTo = $_ENV['MAIL_REPLY_TO'] ?? $from;
+
+        $plain = trim(preg_replace('/\s+/', ' ', strip_tags($html)));
+        if ($plain === '') {
+            $plain = 'Consultez votre compte pour plus de détails.';
+        }
+
         $mail = new PHPMailer\PHPMailer\PHPMailer(true);
         $mail->isSMTP();
         $mail->Host = $_ENV['SMTP_HOST'] ?? 'localhost';
@@ -583,14 +599,25 @@ function send_mail(string $to, string $subject, string $html): bool
         $mail->Password = $_ENV['SMTP_PASS'] ?? '';
         $mail->SMTPSecure = PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
         $mail->Port = (int) ($_ENV['SMTP_PORT'] ?? 587);
-        $mail->setFrom($_ENV['SMTP_FROM'] ?? 'no-reply@example.com', 'Forum');
+        $mail->CharSet = 'UTF-8';
+        $mail->Encoding = 'base64';
+        $mail->setFrom($from, $fromName);
+        $mail->addReplyTo($replyTo, $fromName);
         $mail->addAddress($to);
         $mail->isHTML(true);
         $mail->Subject = $subject;
         $mail->Body = $html;
+        $mail->AltBody = $plain;
+        $mail->XMailer = 'Forum PHP';
         $mail->send();
         return true;
     } catch (Throwable $e) {
+        $logDir = __DIR__ . '/../logs';
+        if (!is_dir($logDir)) {
+            @mkdir($logDir, 0775, true);
+        }
+        $line = '[' . date('Y-m-d H:i:s') . '] MAIL ERROR: ' . $e->getMessage() . PHP_EOL;
+        @file_put_contents($logDir . '/mail.log', $line, FILE_APPEND);
         return false;
     }
 }
@@ -598,6 +625,46 @@ function send_mail(string $to, string $subject, string $html): bool
 function is_logged_in(): bool
 {
     return current_user_id() !== null;
+}
+
+function app_base_url(): string
+{
+    $base = trim((string) ($_ENV['APP_BASE_URL'] ?? ''));
+    return rtrim($base, '/');
+}
+
+function absolute_url(string $path): string
+{
+    if (preg_match('/^https?:\\/\\//i', $path)) {
+        return $path;
+    }
+    $base = app_base_url();
+    if ($base === '') {
+        return $path;
+    }
+    $path = '/' . ltrim($path, '/');
+    return $base . $path;
+}
+
+function mail_button(string $label, string $url): string
+{
+    $safeUrl = e($url);
+    $safeLabel = e($label);
+    return '<a href="' . $safeUrl . '" style="display:inline-block;padding:10px 16px;background:#0d6efd;color:#ffffff;text-decoration:none;border-radius:6px;font-weight:600;">' . $safeLabel . '</a>';
+}
+
+function mail_layout(string $title, string $body, ?string $buttonLabel = null, ?string $buttonUrl = null): string
+{
+    $safeTitle = e($title);
+    $button = '';
+    if ($buttonLabel && $buttonUrl) {
+        $button = '<div style="margin-top:16px;">' . mail_button($buttonLabel, $buttonUrl) . '</div>';
+    }
+    return '<div style="font-family:Arial,Helvetica,sans-serif;color:#111827;line-height:1.5;">'
+        . '<h2 style="margin:0 0 12px;font-size:20px;">' . $safeTitle . '</h2>'
+        . '<div>' . $body . '</div>'
+        . $button
+        . '</div>';
 }
 
 function role_badge_class(?string $role): string
