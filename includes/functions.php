@@ -479,9 +479,13 @@ function create_notification(PDO $pdo, int $userId, string $type, string $messag
         $email = $stmt->fetchColumn();
         if ($email) {
             $notifUrl = absolute_url('notifications.php');
-            $body = '<p>' . e($message) . '</p><p style="color:#6b7280;margin:0;">Consultez vos notifications pour plus de détails.</p>';
-            $html = mail_layout('Nouvelle notification', $body, 'Voir mes notifications', $notifUrl);
-            send_mail($email, 'Notification', $html);
+            $siteTitle = get_setting($pdo, 'site_title', 'Forum PHP') ?? 'Forum PHP';
+            $fromName = 'Notification - ' . $siteTitle;
+            $subject = '[' . $siteTitle . '] Notification';
+            $body = '<p>' . e($message) . '</p>'
+                . '<p style="margin:0;">Lien direct : <a href="' . e($notifUrl) . '">' . e($notifUrl) . '</a></p>';
+            $html = mail_layout('Nouvelle notification', $body);
+            send_mail($email, $subject, $html, $fromName);
         }
     }
 }
@@ -571,7 +575,7 @@ function sync_role_badges(PDO $pdo, int $userId, ?string $role): void
     }
 }
 
-function send_mail(string $to, string $subject, string $html): bool
+function send_mail(string $to, string $subject, string $html, ?string $fromNameOverride = null): bool
 {
     if (!class_exists('\\PHPMailer\\PHPMailer\\PHPMailer')) {
         return false;
@@ -579,7 +583,7 @@ function send_mail(string $to, string $subject, string $html): bool
 
     try {
         $from = $_ENV['SMTP_FROM'] ?? 'no-reply@example.com';
-        $fromName = $_ENV['MAIL_FROM_NAME'] ?? 'Forum';
+        $fromName = $fromNameOverride ?: ($_ENV['MAIL_FROM_NAME'] ?? 'Forum');
         $replyTo = $_ENV['MAIL_REPLY_TO'] ?? $from;
 
         $plain = trim(preg_replace('/\s+/', ' ', strip_tags($html)));
@@ -595,6 +599,8 @@ function send_mail(string $to, string $subject, string $html): bool
         $mail->Password = $_ENV['SMTP_PASS'] ?? '';
         $mail->SMTPSecure = PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
         $mail->Port = (int) ($_ENV['SMTP_PORT'] ?? 587);
+        $mail->CharSet = 'UTF-8';
+        $mail->Encoding = 'base64';
         $mail->setFrom($from, $fromName);
         $mail->addReplyTo($replyTo, $fromName);
         $mail->addAddress($to);
