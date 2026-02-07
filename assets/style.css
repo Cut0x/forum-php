@@ -208,6 +208,23 @@ pre,
     font-size: 0.85rem;
 }
 
+.content img,
+.preview-box img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 10px;
+    box-shadow: 0 10px 24px rgba(15,23,42,0.15);
+    margin: 8px 0;
+    cursor: zoom-in;
+    display: block;
+}
+
+.image-modal-img {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
 .preview-box {
     border: 1px dashed rgba(148,163,184,0.45);
     background: var(--surface-2);
