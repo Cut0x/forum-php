@@ -45,6 +45,7 @@ if (in_array($redirectBase, ['login.php', 'register.php'], true)) {
 
 $loginUrl = 'login.php' . ($redirectParam ? '?redirect=' . rawurlencode($redirectParam) : '');
 $registerUrl = 'register.php' . ($redirectParam ? '?redirect=' . rawurlencode($redirectParam) : '');
+$logoutUrl = 'logout.php' . ($redirectParam ? '?redirect_to=' . rawurlencode($redirectParam) : '');
 ?>
 <!doctype html>
 <html lang="fr" data-bs-theme="<?php echo e($theme); ?>">
@@ -134,7 +135,7 @@ $registerUrl = 'register.php' . ($redirectParam ? '?redirect=' . rawurlencode($r
                     <?php if (is_admin()): ?>
                         <li class="nav-item"><a class="nav-link" href="admin.php"><i class="bi bi-shield-lock me-1"></i>Admin</a></li>
                     <?php endif; ?>
-                    <li class="nav-item"><a class="nav-link" href="logout.php">Déconnexion</a></li>
+                    <li class="nav-item"><a class="nav-link" href="<?php echo e($logoutUrl); ?>">Déconnexion</a></li>
                 <?php else: ?>
                     <li class="nav-item"><a class="nav-link" href="<?php echo e($loginUrl); ?>">Connexion</a></li>
                     <li class="nav-item"><a class="nav-link" href="<?php echo e($registerUrl); ?>">Inscription</a></li>
