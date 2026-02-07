@@ -9,7 +9,11 @@ $categories = [];
 
 require_db();
 if ($categoryId) {
-    $stmt = $pdo->prepare('SELECT id, name, description, is_readonly, is_pinned FROM categories WHERE id = ?');
+    $stmt = $pdo->prepare('SELECT c.id, c.name, c.description, c.is_readonly, c.is_pinned, COUNT(t.id) AS topic_count
+        FROM categories c
+        LEFT JOIN topics t ON t.category_id = c.id AND t.deleted_at IS NULL
+        WHERE c.id = ?
+        GROUP BY c.id');
     $stmt->execute([$categoryId]);
     $category = $stmt->fetch();
 
@@ -33,13 +37,15 @@ if (!$category) {
             <i class="bi bi-pin-angle-fill text-warning ms-1" title="Épinglée"></i>
         <?php endif; ?>
     </h1>
+    <?php $count = (int) $category['topic_count']; ?>
+    <p class="text-muted mb-1"><?php echo e((string) $count); ?> sujet<?php echo $count > 1 ? 's' : ''; ?> -</p>
     <p class="text-muted"><?php echo e($category['description']); ?></p>
 </section>
 
 <div class="card shadow-sm">
     <div class="card-header bg-white d-flex justify-content-between align-items-center">
         <strong>Sujets</strong>
-        <?php if (empty($category['is_readonly']) || is_admin()): ?>
+        <?php if (is_logged_in() && (empty($category['is_readonly']) || is_admin())): ?>
             <button class="btn btn-sm btn-primary" type="button"
                     data-bs-toggle="modal"
                     data-bs-target="#newTopicModal"

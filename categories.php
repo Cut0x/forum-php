@@ -3,7 +3,11 @@ require __DIR__ . '/includes/bootstrap.php';
 require __DIR__ . '/includes/header.php';
 
 require_db();
-$categories = $pdo->query('SELECT id, name, description, is_pinned, is_readonly FROM categories ORDER BY is_pinned DESC, sort_order, name')->fetchAll();
+$categories = $pdo->query('SELECT c.id, c.name, c.description, c.is_pinned, c.is_readonly, COUNT(t.id) AS topic_count
+    FROM categories c
+    LEFT JOIN topics t ON t.category_id = c.id AND t.deleted_at IS NULL
+    GROUP BY c.id
+    ORDER BY c.is_pinned DESC, c.sort_order, c.name')->fetchAll();
 ?>
 <h1 class="h4 mb-3">Toutes les catégories</h1>
 <div class="row g-3">
@@ -17,10 +21,12 @@ $categories = $pdo->query('SELECT id, name, description, is_pinned, is_readonly 
                             <i class="bi bi-pin-angle-fill text-warning ms-1" title="Épinglée"></i>
                         <?php endif; ?>
                     </h5>
+                    <?php $count = (int) $category['topic_count']; ?>
+                    <p class="text-muted mb-1"><?php echo e((string) $count); ?> sujet<?php echo $count > 1 ? 's' : ''; ?> -</p>
                     <p class="text-muted mb-3"><?php echo e($category['description']); ?></p>
                     <div class="d-flex gap-2 flex-wrap">
                         <a href="categorie.php?id=<?php echo e((string) $category['id']); ?>" class="btn btn-sm btn-outline-primary">Voir les sujets</a>
-                        <?php if (empty($category['is_readonly']) || is_admin()): ?>
+                        <?php if (is_logged_in() && (empty($category['is_readonly']) || is_admin())): ?>
                             <button class="btn btn-sm btn-primary" type="button"
                                     data-bs-toggle="modal"
                                     data-bs-target="#newTopicModal"
