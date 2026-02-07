@@ -74,4 +74,5 @@ if (!move_uploaded_file($file['tmp_name'], $target)) {
 }
 
 $publicPath = 'uploads/images/' . $filename;
-echo json_encode(['url' => $publicPath]);
+$publicUrl = function_exists('absolute_url') ? absolute_url($publicPath) : $publicPath;
+echo json_encode(['url' => $publicUrl]);

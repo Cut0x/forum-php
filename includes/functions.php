@@ -239,10 +239,94 @@ function apply_emotes_to_html(PDO $pdo, string $html): string
     return $html;
 }
 
+function is_safe_image_url(string $url): bool
+{
+    $url = trim($url);
+    if ($url === '') {
+        return false;
+    }
+    if (preg_match('/[\r\n]/', $url)) {
+        return false;
+    }
+    $parts = parse_url($url);
+    if ($parts === false) {
+        return false;
+    }
+    if (isset($parts['scheme'])) {
+        $scheme = strtolower($parts['scheme']);
+        return in_array($scheme, ['http', 'https'], true);
+    }
+    return true;
+}
+
+function apply_images_to_html(string $html): string
+{
+    $doc = new DOMDocument('1.0', 'UTF-8');
+    $prev = libxml_use_internal_errors(true);
+    $wrapped = '<?xml encoding="UTF-8" ?><div>' . $html . '</div>';
+    $doc->loadHTML($wrapped, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+    libxml_use_internal_errors($prev);
+
+    $pattern = '/!\[([^\]]*)\]\(([^)\s]+)\)/';
+    $xpath = new DOMXPath($doc);
+    $textNodes = $xpath->query('//text()');
+    if (!$textNodes) {
+        return $html;
+    }
+
+    foreach ($textNodes as $textNode) {
+        if (node_is_in_tags($textNode, ['code', 'pre'])) {
+            continue;
+        }
+        $value = $textNode->nodeValue;
+        if (!preg_match($pattern, $value)) {
+            continue;
+        }
+        $parts = preg_split($pattern, $value, -1, PREG_SPLIT_DELIM_CAPTURE);
+        if ($parts === false || $parts === null) {
+            continue;
+        }
+
+        $fragment = $doc->createDocumentFragment();
+        for ($i = 0; $i < count($parts); $i++) {
+            if ($i % 3 === 0) {
+                if ($parts[$i] !== '') {
+                    $fragment->appendChild($doc->createTextNode($parts[$i]));
+                }
+                continue;
+            }
+            if (($i % 3) === 1) {
+                $alt = $parts[$i];
+                $url = $parts[$i + 1] ?? '';
+                if (!is_safe_image_url($url)) {
+                    $fragment->appendChild($doc->createTextNode('![' . $alt . '](' . $url . ')'));
+                    $i++;
+                    continue;
+                }
+                $img = $doc->createElement('img');
+                $img->setAttribute('src', $url);
+                $img->setAttribute('alt', $alt);
+                $fragment->appendChild($img);
+                $i++;
+                continue;
+            }
+        }
+
+        $textNode->parentNode->replaceChild($fragment, $textNode);
+    }
+
+    $root = $doc->documentElement;
+    if ($root) {
+        return $doc->saveHTML($root);
+    }
+    return $html;
+}
+
 function render_markdown_with_emotes(PDO $pdo, string $text): string
 {
     $html = render_markdown($text);
-    return apply_emotes_to_html($pdo, $html);
+    $html = apply_emotes_to_html($pdo, $html);
+    return apply_images_to_html($html);
 }
 
 function render_markdown_with_mentions(PDO $pdo, string $text): string

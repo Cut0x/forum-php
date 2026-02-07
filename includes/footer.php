@@ -246,8 +246,16 @@ if ($pdo) {
     document.querySelectorAll('[data-emotes="1"]').forEach(initEmotes);
 
     function initImages(textarea) {
-        const toolbar = document.createElement('div');
-        toolbar.className = 'emote-toolbar';
+        let toolbar = textarea.previousElementSibling;
+        while (toolbar && !toolbar.classList.contains('emote-toolbar')) {
+            toolbar = toolbar.previousElementSibling;
+        }
+        if (!toolbar) {
+            toolbar = document.createElement('div');
+            toolbar.className = 'emote-toolbar';
+            textarea.parentNode.insertBefore(toolbar, textarea);
+        }
+
         const button = document.createElement('button');
         button.type = 'button';
         button.className = 'btn btn-sm btn-outline-secondary';
@@ -259,11 +267,10 @@ if ($pdo) {
         input.type = 'file';
         input.accept = 'image/*';
         input.className = 'd-none';
+
         toolbar.appendChild(button);
         toolbar.appendChild(status);
         toolbar.appendChild(input);
-
-        textarea.parentNode.insertBefore(toolbar, textarea);
 
         button.addEventListener('click', () => input.click());
         input.addEventListener('change', () => {
