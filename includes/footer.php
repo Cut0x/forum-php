@@ -5,6 +5,7 @@ $footerLink = '';
 $footerCategories = [];
 $footerLinks = [];
 $emotesData = [];
+$baseUrl = function_exists('app_base_url') ? app_base_url() : '';
 $pdoReady = isset($pdo) && $pdo;
 if ($pdoReady) {
     $footerText = get_setting($pdo, 'footer_text', $footerText) ?? $footerText;
@@ -64,9 +65,19 @@ if ($pdo) {
         </div>
     </div>
 </footer>
+<div class="modal fade" id="imagePreviewModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body p-0">
+                <img class="image-modal-img" src="" alt="image">
+            </div>
+        </div>
+    </div>
+</div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
     window.__EMOTES = <?php echo $emotesJson; ?>;
+    window.__BASE_URL = <?php echo json_encode($baseUrl, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT | JSON_INVALID_UTF8_SUBSTITUTE); ?>;
     const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
     tooltipTriggerList.map((tooltipTriggerEl) => new bootstrap.Tooltip(tooltipTriggerEl));
 
@@ -233,6 +244,79 @@ if ($pdo) {
     }
 
     document.querySelectorAll('[data-emotes="1"]').forEach(initEmotes);
+
+    function initImages(textarea) {
+        let toolbar = textarea.previousElementSibling;
+        while (toolbar && !toolbar.classList.contains('emote-toolbar')) {
+            toolbar = toolbar.previousElementSibling;
+        }
+        if (!toolbar) {
+            toolbar = document.createElement('div');
+            toolbar.className = 'emote-toolbar';
+            textarea.parentNode.insertBefore(toolbar, textarea);
+        }
+
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'btn btn-sm btn-outline-secondary';
+        button.textContent = 'Image';
+        const status = document.createElement('span');
+        status.className = 'text-muted small';
+        status.textContent = '';
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.className = 'd-none';
+
+        toolbar.appendChild(button);
+        toolbar.appendChild(status);
+        toolbar.appendChild(input);
+
+        button.addEventListener('click', () => input.click());
+        input.addEventListener('change', () => {
+            const file = input.files && input.files[0];
+            if (!file) return;
+            status.textContent = 'Upload...';
+            const body = new FormData();
+            body.append('image', file);
+            const uploadUrl = window.__BASE_URL ? (window.__BASE_URL + '/upload-image.php') : 'upload-image.php';
+            fetch(uploadUrl, { method: 'POST', body })
+                .then(r => r.json())
+                .then(data => {
+                    if (!data || !data.url) {
+                        throw new Error('upload_failed');
+                    }
+                    insertAtCursor(textarea, `![](${data.url})`);
+                    status.textContent = 'OK';
+                    setTimeout(() => { status.textContent = ''; }, 1200);
+                })
+                .catch(() => {
+                    status.textContent = 'Erreur';
+                    setTimeout(() => { status.textContent = ''; }, 1500);
+                })
+                .finally(() => {
+                    input.value = '';
+                });
+        });
+    }
+
+    document.querySelectorAll('[data-images="1"]').forEach(initImages);
+
+    const imageModalEl = document.getElementById('imagePreviewModal');
+    const imageModalImg = imageModalEl ? imageModalEl.querySelector('img') : null;
+    if (imageModalEl && imageModalImg) {
+        const imageModal = new bootstrap.Modal(imageModalEl);
+        document.addEventListener('click', (e) => {
+            const img = e.target.closest('img');
+            if (!img) return;
+            if (!img.closest('.content') && !img.closest('.preview-box')) return;
+            if (img.classList.contains('emote') || img.classList.contains('profile-avatar') || img.classList.contains('badge-icon')) {
+                return;
+            }
+            imageModalImg.src = img.src;
+            imageModal.show();
+        });
+    }
 </script>
 </body>
 </html>

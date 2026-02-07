@@ -77,7 +77,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Message (Markdown)</label>
-                    <textarea class="form-control" id="markdown" name="content" rows="6" placeholder="Votre message..." data-mentions="1" data-emotes="1"></textarea>
+                    <textarea class="form-control" id="markdown" name="content" rows="6" placeholder="Votre message..." data-mentions="1" data-emotes="1" data-images="1"></textarea>
                     </div>
                     <div class="preview-box mb-3" id="preview">Aperçu...</div>
                     <button class="btn btn-primary" type="submit">Publier</button>

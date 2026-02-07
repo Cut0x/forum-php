@@ -94,7 +94,7 @@ $topics = $pdo->query('SELECT t.id, t.title, t.created_at, c.name AS category_na
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Message (Markdown)</label>
-                        <textarea class="form-control" id="newTopicContent" name="content" rows="6" placeholder="Votre message..." data-mentions="1" data-emotes="1"></textarea>
+                        <textarea class="form-control" id="newTopicContent" name="content" rows="6" placeholder="Votre message..." data-mentions="1" data-emotes="1" data-images="1"></textarea>
                     </div>
                     <div class="preview-box" id="newTopicPreview">Aperçu...</div>
                 </div>
