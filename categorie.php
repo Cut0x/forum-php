@@ -2,38 +2,68 @@
 require __DIR__ . '/includes/bootstrap.php';
 require __DIR__ . '/includes/header.php';
 
+$categoryId = (int)($_GET['id'] ?? 0);
+$category = null;
+$topics = [];
+$categories = [];
+
 require_db();
-$categories = $pdo->query('SELECT id, name, description, is_pinned, is_readonly FROM categories ORDER BY is_pinned DESC, sort_order, name')->fetchAll();
+if ($categoryId) {
+    $stmt = $pdo->prepare('SELECT id, name, description, is_readonly, is_pinned FROM categories WHERE id = ?');
+    $stmt->execute([$categoryId]);
+    $category = $stmt->fetch();
+
+    $categories = $pdo->query('SELECT id, name, is_readonly FROM categories ORDER BY is_pinned DESC, sort_order, name')->fetchAll();
+
+    $stmt = $pdo->prepare('SELECT id, title, created_at FROM topics WHERE category_id = ? AND deleted_at IS NULL ORDER BY created_at DESC');
+    $stmt->execute([$categoryId]);
+    $topics = $stmt->fetchAll();
+}
+
+if (!$category) {
+    echo '<div class="alert alert-danger">Catégorie introuvable.</div>';
+    require __DIR__ . '/includes/footer.php';
+    exit;
+}
 ?>
-<h1 class="h4 mb-3">Toutes les catégories</h1>
-<div class="row g-3">
-    <?php foreach ($categories as $category): ?>
-        <div class="col-md-6">
-            <div class="card shadow-sm card-category h-100">
-                <div class="card-body">
-                    <h5 class="card-title">
-                        <?php echo e($category['name']); ?>
-                        <?php if (!empty($category['is_pinned'])): ?>
-                            <i class="bi bi-pin-angle-fill text-warning ms-1" title="Épinglée"></i>
-                        <?php endif; ?>
-                    </h5>
-                    <p class="text-muted mb-3"><?php echo e($category['description']); ?></p>
-                    <div class="d-flex gap-2 flex-wrap">
-                        <a href="categorie.php?id=<?php echo e((string) $category['id']); ?>" class="btn btn-sm btn-outline-primary">Voir les sujets</a>
-                        <?php if (empty($category['is_readonly']) || is_admin()): ?>
-                            <button class="btn btn-sm btn-primary" type="button"
-                                    data-bs-toggle="modal"
-                                    data-bs-target="#newTopicModal"
-                                    data-category-id="<?php echo e((string) $category['id']); ?>"
-                                    data-category-name="<?php echo e($category['name']); ?>">
-                                Nouveau sujet
-                            </button>
-                        <?php endif; ?>
+<section class="mb-4">
+    <h1 class="h4 mb-1">
+        <?php echo e($category['name']); ?>
+        <?php if (!empty($category['is_pinned'])): ?>
+            <i class="bi bi-pin-angle-fill text-warning ms-1" title="Épinglée"></i>
+        <?php endif; ?>
+    </h1>
+    <p class="text-muted"><?php echo e($category['description']); ?></p>
+</section>
+
+<div class="card shadow-sm">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <strong>Sujets</strong>
+        <?php if (empty($category['is_readonly']) || is_admin()): ?>
+            <button class="btn btn-sm btn-primary" type="button"
+                    data-bs-toggle="modal"
+                    data-bs-target="#newTopicModal"
+                    data-category-id="<?php echo e((string) $category['id']); ?>"
+                    data-category-name="<?php echo e($category['name']); ?>">
+                Nouveau sujet
+            </button>
+        <?php else: ?>
+            <span class="text-muted small">Lecture seule</span>
+        <?php endif; ?>
+    </div>
+    <div class="list-group list-group-flush">
+        <?php foreach ($topics as $topic): ?>
+            <a class="list-group-item list-group-item-action" href="topic.php?id=<?php echo e((string) $topic['id']); ?>">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="mb-1"><?php echo e($topic['title']); ?></h6>
+                        <small class="text-muted">Dernière activité</small>
                     </div>
+                    <small class="text-muted"><?php echo e(format_date($topic['created_at'])); ?></small>
                 </div>
-            </div>
-        </div>
-    <?php endforeach; ?>
+            </a>
+        <?php endforeach; ?>
+    </div>
 </div>
 
 <div class="modal fade" id="newTopicModal" tabindex="-1" aria-hidden="true">
@@ -49,9 +79,9 @@ $categories = $pdo->query('SELECT id, name, description, is_pinned, is_readonly 
                         <label class="form-label">Catégorie</label>
                         <select class="form-select" name="category_id" required>
                             <option value="">Sélectionner...</option>
-                            <?php foreach ($categories as $category): ?>
-                                <option value="<?php echo e((string) $category['id']); ?>" <?php echo !empty($category['is_readonly']) && !is_admin() ? 'disabled' : ''; ?>>
-                                    <?php echo e($category['name']); ?><?php echo !empty($category['is_readonly']) ? ' (lecture seule)' : ''; ?>
+                            <?php foreach ($categories as $cat): ?>
+                                <option value="<?php echo e((string) $cat['id']); ?>" <?php echo !empty($cat['is_readonly']) && !is_admin() ? 'disabled' : ''; ?> <?php echo (int) $cat['id'] === (int) $categoryId ? 'selected' : ''; ?>>
+                                    <?php echo e($cat['name']); ?><?php echo !empty($cat['is_readonly']) ? ' (lecture seule)' : ''; ?>
                                 </option>
                             <?php endforeach; ?>
                         </select>
@@ -112,4 +142,5 @@ $categories = $pdo->query('SELECT id, name, description, is_pinned, is_readonly 
         });
     }
 </script>
+
 <?php require __DIR__ . '/includes/footer.php'; ?>

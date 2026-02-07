@@ -18,7 +18,7 @@ $urls = [
 if ($pdo) {
     $cats = $pdo->query('SELECT id FROM categories')->fetchAll();
     foreach ($cats as $c) {
-        $urls[] = ['loc' => $base . '/category.php?id=' . $c['id'], 'priority' => '0.7', 'changefreq' => 'weekly'];
+        $urls[] = ['loc' => $base . '/categorie.php?id=' . $c['id'], 'priority' => '0.7', 'changefreq' => 'weekly'];
     }
 
     $topics = $pdo->query('SELECT id, created_at, edited_at FROM topics WHERE deleted_at IS NULL')->fetchAll();
