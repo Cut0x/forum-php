@@ -2,7 +2,7 @@
 require __DIR__ . '/includes/bootstrap.php';
 
 if (!is_logged_in()) {
-    header('Location: login.php');
+    header('Location: ' . login_redirect_target());
     exit;
 }
 
