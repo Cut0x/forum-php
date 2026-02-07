@@ -150,7 +150,7 @@ if (!$topic) {
 }
 ?>
 <section class="mb-4">
-    <a class="btn btn-sm btn-outline-secondary mb-2" href="category.php?id=<?php echo e((string) $topic['category_id']); ?>">
+    <a class="btn btn-sm btn-outline-secondary mb-2" href="categorie.php?id=<?php echo e((string) $topic['category_id']); ?>">
         <i class="bi bi-arrow-left"></i> Retour à la catégorie
     </a>
     <h1 class="h4 mb-1"><?php echo e($topic['title']); ?></h1>
