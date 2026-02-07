@@ -207,6 +207,7 @@ if (!$user) {
 }
 
 $avatar = $user['avatar'] ?: 'assets/default_user.jpg';
+$bioHtml = apply_emotes_to_html($pdo, nl2br(e($user['bio'] ?? '')));
 ?>
 <section class="profile-hero p-4 mb-4 shadow-sm">
     <div class="d-flex flex-column flex-md-row align-items-md-center gap-4">
@@ -221,7 +222,7 @@ $avatar = $user['avatar'] ?: 'assets/default_user.jpg';
                             <?php echo e(role_label($user['role'] ?? null)); ?>
                         </span>
                     </div>
-                    <p class="text-muted mb-0"><?php echo e($user['bio']); ?></p>
+                    <div class="text-muted mb-0"><?php echo $bioHtml; ?></div>
                 </div>
                 <?php if ($canEdit): ?>
                     <div class="d-flex gap-2">
