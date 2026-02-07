@@ -163,7 +163,7 @@ pre,
     object-fit: contain;
     vertical-align: -0.30em;
     display: inline-block;
-    margin: 0 1px;
+    margin: 0;
 }
 
 .emote-card.emote-disabled {
@@ -208,8 +208,8 @@ pre,
     font-size: 0.85rem;
 }
 
-.content img,
-.preview-box img {
+.content .post-image,
+.preview-box .post-image {
     max-width: 100%;
     height: auto;
     border-radius: 10px;

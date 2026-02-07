@@ -307,12 +307,9 @@ if ($pdo) {
     if (imageModalEl && imageModalImg) {
         const imageModal = new bootstrap.Modal(imageModalEl);
         document.addEventListener('click', (e) => {
-            const img = e.target.closest('img');
+            const img = e.target.closest('img.post-image');
             if (!img) return;
             if (!img.closest('.content') && !img.closest('.preview-box')) return;
-            if (img.classList.contains('emote') || img.classList.contains('profile-avatar') || img.classList.contains('badge-icon')) {
-                return;
-            }
             imageModalImg.src = img.src;
             imageModal.show();
         });
