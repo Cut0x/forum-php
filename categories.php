@@ -22,7 +22,7 @@ $categories = $pdo->query('SELECT c.id, c.name, c.description, c.is_pinned, c.is
                         <?php endif; ?>
                     </h5>
                     <?php $count = (int) $category['topic_count']; ?>
-                    <p class="text-muted mb-1"><?php echo e((string) $count); ?> sujet<?php echo $count > 1 ? 's' : ''; ?> -</p>
+                    <p class="text-muted mb-1"><?php echo e((string) $count); ?> sujet<?php echo $count > 1 ? 's' : ''; ?></p>
                     <p class="text-muted mb-3"><?php echo e($category['description']); ?></p>
                     <div class="d-flex gap-2 flex-wrap">
                         <a href="categorie.php?id=<?php echo e((string) $category['id']); ?>" class="btn btn-sm btn-outline-primary">Voir les sujets</a>

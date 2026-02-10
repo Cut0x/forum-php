@@ -38,7 +38,7 @@ if (!$category) {
         <?php endif; ?>
     </h1>
     <?php $count = (int) $category['topic_count']; ?>
-    <p class="text-muted mb-1"><?php echo e((string) $count); ?> sujet<?php echo $count > 1 ? 's' : ''; ?> -</p>
+    <p class="text-muted mb-1"><?php echo e((string) $count); ?> sujet<?php echo $count > 1 ? 's' : ''; ?></p>
     <p class="text-muted"><?php echo e($category['description']); ?></p>
 </section>
 
