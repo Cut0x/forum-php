@@ -6,9 +6,6 @@ if (!is_logged_in()) {
     exit;
 }
 
-require __DIR__ . '/includes/header.php';
-require_db();
-
 $filters = ['all', 'reply', 'mention', 'vote'];
 $type = $_GET['type'] ?? 'all';
 if (!in_array($type, $filters, true)) {
@@ -20,6 +17,10 @@ $perPage = 20;
 $offset = ($page - 1) * $perPage;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!$pdo) {
+        require __DIR__ . '/includes/header.php';
+        require_db();
+    }
     $action = $_POST['action'] ?? '';
 
     if ($action === 'mark_read') {
@@ -48,10 +49,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
+    if ($type === 'all') {
+        $stmt = $pdo->prepare('SELECT COUNT(*) FROM notifications WHERE user_id = ?');
+        $stmt->execute([current_user_id()]);
+    } else {
+        $stmt = $pdo->prepare('SELECT COUNT(*) FROM notifications WHERE user_id = ? AND type = ?');
+        $stmt->execute([current_user_id(), $type]);
+    }
+    $total = (int) $stmt->fetchColumn();
+    $totalPages = max(1, (int) ceil($total / $perPage));
+    if ($page > $totalPages) {
+        $page = $totalPages;
+    }
+
     $q = http_build_query(['type' => $type, 'page' => $page]);
     header('Location: notifications.php?' . $q);
     exit;
 }
+
+require __DIR__ . '/includes/header.php';
+require_db();
+$notificationsEnabled = function_exists('user_notifications_enabled')
+    ? user_notifications_enabled($pdo, current_user_id())
+    : true;
 
 if ($type === 'all') {
     $stmt = $pdo->prepare('SELECT COUNT(*) FROM notifications WHERE user_id = ?');
@@ -118,6 +138,11 @@ foreach ($stmt->fetchAll() as $row) {
         </div>
     </div>
     <div class="card-body">
+        <?php if (!$notificationsEnabled): ?>
+            <div class="alert alert-warning">
+                Les notifications sont désactivées. Vous pouvez les réactiver dans <a href="settings.php">vos paramètres</a>.
+            </div>
+        <?php endif; ?>
         <div class="btn-group mb-3" role="group">
             <a class="btn btn-outline-secondary <?php echo $type === 'all' ? 'active' : ''; ?>" href="notifications.php?type=all">Toutes</a>
             <a class="btn btn-outline-secondary <?php echo $type === 'reply' ? 'active' : ''; ?>" href="notifications.php?type=reply">Réponses <?php echo isset($counts['reply']) ? '(' . $counts['reply'] . ')' : ''; ?></a>
