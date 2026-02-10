@@ -10,9 +10,7 @@ $notifCount = 0;
 $notificationsEnabled = true;
 
 if ($pdo && $isLogged) {
-    $notificationsEnabled = function_exists('user_notifications_enabled')
-        ? user_notifications_enabled($pdo, current_user_id())
-        : true;
+    $notificationsEnabled = user_notifications_enabled($pdo, current_user_id());
     if ($notificationsEnabled) {
         $stmt = $pdo->prepare('SELECT COUNT(*) FROM notifications WHERE user_id = ? AND is_read = 0');
         $stmt->execute([current_user_id()]);

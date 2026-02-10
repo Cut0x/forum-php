@@ -6,6 +6,11 @@ if (!is_logged_in()) {
     exit;
 }
 
+require __DIR__ . '/includes/header.php';
+require_db();
+
+$notificationsEnabled = user_notifications_enabled($pdo, current_user_id());
+
 $filters = ['all', 'reply', 'mention', 'vote'];
 $type = $_GET['type'] ?? 'all';
 if (!in_array($type, $filters, true)) {
