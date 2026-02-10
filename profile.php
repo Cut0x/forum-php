@@ -145,7 +145,7 @@ $stripeEnabled = false;
 $stripeUrl = '';
 
 if ($pdo && $userId) {
-    $stmt = $pdo->prepare('SELECT id, name, username, bio, avatar, role FROM users WHERE id = ?');
+    $stmt = $pdo->prepare('SELECT id, name, username, bio, avatar, role, created_at FROM users WHERE id = ?');
     $stmt->execute([$userId]);
     $user = $stmt->fetch();
 
@@ -186,6 +186,7 @@ if (!$user) {
         'bio' => 'Développeur et mainteneur du forum.',
         'avatar' => 'assets/default_user.jpg',
         'role' => 'admin',
+        'created_at' => '2026-02-05 10:00:00',
     ];
     $badges = [
         ['name' => 'Premier message', 'color' => '#4f8cff', 'icon' => 'assets/badges/starter.png'],
@@ -212,6 +213,14 @@ if (!$user) {
 
 $avatar = $user['avatar'] ?: 'assets/default_user.jpg';
 $bioHtml = apply_emotes_to_html($pdo, nl2br(e($user['bio'] ?? '')));
+$createdAtLabel = '—';
+if (!empty($user['created_at'])) {
+    try {
+        $createdAtLabel = (new DateTime($user['created_at']))->format('d/m/Y');
+    } catch (Throwable $e) {
+        $createdAtLabel = '—';
+    }
+}
 ?>
 <section class="profile-hero p-4 mb-4 shadow-sm">
     <div class="d-flex flex-column flex-md-row align-items-md-center gap-4">
@@ -227,6 +236,7 @@ $bioHtml = apply_emotes_to_html($pdo, nl2br(e($user['bio'] ?? '')));
                         </span>
                     </div>
                     <div class="text-muted mb-0"><?php echo $bioHtml; ?></div>
+                    <div class="small text-muted mt-2">Inscrit le <?php echo e($createdAtLabel); ?></div>
                 </div>
                 <?php if ($canEdit): ?>
                     <div class="d-flex gap-2">
