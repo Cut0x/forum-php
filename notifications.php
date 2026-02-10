@@ -22,6 +22,10 @@ $perPage = 20;
 $offset = ($page - 1) * $perPage;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!$pdo) {
+        require __DIR__ . '/includes/header.php';
+        require_db();
+    }
     $action = $_POST['action'] ?? '';
 
     if ($action === 'mark_read') {
@@ -67,6 +71,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     header('Location: notifications.php?' . $q);
     exit;
 }
+
+require __DIR__ . '/includes/header.php';
+require_db();
+$notificationsEnabled = function_exists('user_notifications_enabled')
+    ? user_notifications_enabled($pdo, current_user_id())
+    : true;
 
 if ($type === 'all') {
     $stmt = $pdo->prepare('SELECT COUNT(*) FROM notifications WHERE user_id = ?');
