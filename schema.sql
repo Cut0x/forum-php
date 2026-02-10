@@ -8,6 +8,7 @@ CREATE TABLE users (
     email VARCHAR(190) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
     role VARCHAR(20) NOT NULL DEFAULT 'member',
+    notifications_enabled TINYINT NOT NULL DEFAULT 1,
     bio TEXT NULL,
     avatar VARCHAR(255) NULL,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
