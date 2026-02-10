@@ -75,6 +75,59 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 exit;
             }
         }
+    } elseif ($action === 'update_password') {
+        $current = (string) ($_POST['current_password'] ?? '');
+        $new = (string) ($_POST['new_password'] ?? '');
+        $confirm = (string) ($_POST['confirm_password'] ?? '');
+
+        if ($current === '' || $new === '' || $confirm === '') {
+            $error = 'Tous les champs sont requis.';
+        } elseif (strlen($new) < 6) {
+            $error = 'Le nouveau mot de passe doit contenir au moins 6 caractères.';
+        } elseif ($new !== $confirm) {
+            $error = 'Les mots de passe ne correspondent pas.';
+        } else {
+            $stmt = $pdo->prepare('SELECT password_hash FROM users WHERE id = ?');
+            $stmt->execute([$userId]);
+            $hash = (string) $stmt->fetchColumn();
+            if (!$hash || !password_verify($current, $hash)) {
+                $error = 'Mot de passe actuel incorrect.';
+            } else {
+                $newHash = password_hash($new, PASSWORD_DEFAULT);
+                $stmt = $pdo->prepare('UPDATE users SET password_hash = ? WHERE id = ?');
+                $stmt->execute([$newHash, $userId]);
+                $success = 'Mot de passe mis à jour.';
+            }
+        }
+    } elseif ($action === 'export_data') {
+        $stmt = $pdo->prepare('SELECT id, name, username, email, role, bio, avatar, created_at FROM users WHERE id = ?');
+        $stmt->execute([$userId]);
+        $user = $stmt->fetch();
+
+        $stmt = $pdo->prepare('SELECT label, url FROM user_links WHERE user_id = ?');
+        $stmt->execute([$userId]);
+        $links = $stmt->fetchAll();
+
+        $stmt = $pdo->prepare('SELECT id, category_id, title, created_at, edited_at, locked_at, deleted_at FROM topics WHERE user_id = ?');
+        $stmt->execute([$userId]);
+        $topics = $stmt->fetchAll();
+
+        $stmt = $pdo->prepare('SELECT id, topic_id, content, created_at, edited_at, deleted_at FROM posts WHERE user_id = ?');
+        $stmt->execute([$userId]);
+        $posts = $stmt->fetchAll();
+
+        $payload = [
+            'user' => $user ?: [],
+            'links' => $links,
+            'topics' => $topics,
+            'posts' => $posts,
+            'exported_at' => date('c'),
+        ];
+
+        header('Content-Type: application/json; charset=UTF-8');
+        header('Content-Disposition: attachment; filename="forum_export_' . $userId . '.json"');
+        echo json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+        exit;
     }
 }
 
@@ -137,6 +190,41 @@ if ($notificationsAvailable) {
                     </div>
                     <div>
                         <button type="submit" class="btn btn-outline-primary">Mettre à jour l’email</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="row g-4 mt-1">
+            <div class="col-lg-6">
+                <form method="post" class="d-flex flex-column gap-3">
+                    <input type="hidden" name="action" value="update_password">
+                    <div>
+                        <label class="form-label">Mot de passe actuel</label>
+                        <input class="form-control" name="current_password" type="password" required>
+                    </div>
+                    <div>
+                        <label class="form-label">Nouveau mot de passe</label>
+                        <input class="form-control" name="new_password" type="password" required>
+                    </div>
+                    <div>
+                        <label class="form-label">Confirmer le nouveau mot de passe</label>
+                        <input class="form-control" name="confirm_password" type="password" required>
+                    </div>
+                    <div>
+                        <button type="submit" class="btn btn-outline-primary">Mettre à jour le mot de passe</button>
+                    </div>
+                </form>
+            </div>
+            <div class="col-lg-6">
+                <form method="post" class="d-flex flex-column gap-3">
+                    <input type="hidden" name="action" value="export_data">
+                    <div>
+                        <label class="form-label">Exporter mes données</label>
+                        <div class="form-text text-muted">Télécharge un fichier JSON avec votre profil, vos liens, vos sujets et vos messages.</div>
+                    </div>
+                    <div>
+                        <button type="submit" class="btn btn-outline-secondary">Télécharger l’export</button>
                     </div>
                 </form>
             </div>
