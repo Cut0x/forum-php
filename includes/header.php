@@ -94,53 +94,77 @@ $logoutUrl = 'logout.php' . ($redirectParam ? '?redirect_to=' . rawurlencode($re
     </style>
 </head>
 <body class="app-body d-flex flex-column min-vh-100">
-<nav class="navbar navbar-expand-lg shadow-sm">
+<nav class="navbar navbar-expand-lg shadow-sm forum-navbar">
     <div class="container">
         <a class="navbar-brand fw-semibold" href="<?php echo e($baseUrl ?: 'index.php'); ?>">
             <i class="bi bi-chat-left-text me-2"></i><?php echo e($appName); ?>
         </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarForum">
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarForum" aria-controls="navbarForum" aria-expanded="false" aria-label="Basculer la navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarForum">
-            <ul class="navbar-nav me-auto">
+            <ul class="navbar-nav me-lg-auto align-items-lg-center gap-lg-2">
                 <li class="nav-item"><a class="nav-link" href="index.php">Accueil</a></li>
                 <li class="nav-item"><a class="nav-link" href="categories.php">Catégories</a></li>
             </ul>
-            <ul class="navbar-nav">
-                <li class="nav-item">
-                    <a class="nav-link" href="theme.php" data-bs-toggle="tooltip" title="Basculer le thème">
-                        <?php if ($theme === 'dark'): ?>
-                            <i class="bi bi-sun"></i>
-                        <?php else: ?>
-                            <i class="bi bi-moon-stars"></i>
-                        <?php endif; ?>
-                    </a>
-                </li>
-                <?php if ($isLogged): ?>
+            <div class="navbar-actions">
+                <ul class="navbar-nav align-items-lg-center gap-lg-2">
                     <li class="nav-item">
-                        <a class="nav-link position-relative" href="notifications.php">
-                            <i class="bi bi-bell"></i>
-                            <?php if ($notifCount > 0): ?>
-                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                                    <?php echo e((string) $notifCount); ?>
-                                </span>
+                        <a class="nav-link d-flex align-items-center gap-2" href="theme.php" data-bs-toggle="tooltip" title="Basculer le thème">
+                            <?php if ($theme === 'dark'): ?>
+                                <i class="bi bi-sun"></i>
+                            <?php else: ?>
+                                <i class="bi bi-moon-stars"></i>
                             <?php endif; ?>
+                            <span class="d-lg-none">Thème</span>
                         </a>
                     </li>
-                    <li class="nav-item d-flex align-items-center me-2">
-                        <span class="<?php echo e(role_badge_class($role)); ?>"><?php echo e(role_label($role)); ?></span>
-                    </li>
-                    <li class="nav-item"><a class="nav-link" href="profile.php"><i class="bi bi-person-circle me-1"></i><?php echo e($displayName ?? 'Profil'); ?></a></li>
-                    <?php if (is_admin()): ?>
-                        <li class="nav-item"><a class="nav-link" href="admin.php"><i class="bi bi-shield-lock me-1"></i>Admin</a></li>
+                    <?php if ($isLogged): ?>
+                        <li class="nav-item">
+                            <a class="nav-link position-relative d-flex align-items-center gap-2" href="notifications.php">
+                                <i class="bi bi-bell"></i>
+                                <span class="d-lg-none">Notifications</span>
+                                <?php if ($notifCount > 0): ?>
+                                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                                        <?php echo e((string) $notifCount); ?>
+                                    </span>
+                                <?php endif; ?>
+                            </a>
+                        </li>
                     <?php endif; ?>
-                    <li class="nav-item"><a class="nav-link" href="<?php echo e($logoutUrl); ?>">Déconnexion</a></li>
-                <?php else: ?>
-                    <li class="nav-item"><a class="nav-link" href="<?php echo e($loginUrl); ?>">Connexion</a></li>
-                    <li class="nav-item"><a class="nav-link" href="<?php echo e($registerUrl); ?>">Inscription</a></li>
-                <?php endif; ?>
-            </ul>
+                </ul>
+                <ul class="navbar-nav align-items-lg-center gap-lg-2">
+                    <?php if ($isLogged): ?>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <span class="nav-user-icon"><i class="bi bi-person-circle"></i></span>
+                                <span class="nav-user-name"><?php echo e($displayName ?? 'Profil'); ?></span>
+                                <span class="<?php echo e(role_badge_class($role)); ?> d-none d-lg-inline-flex"><?php echo e(role_label($role)); ?></span>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                                <li class="dropdown-header">
+                                    Connecté en tant que <?php echo e($displayName ?? $username ?? 'Utilisateur'); ?>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="profile.php"><i class="bi bi-person me-2"></i>Profil</a>
+                                </li>
+                                <?php if (is_admin()): ?>
+                                    <li>
+                                        <a class="dropdown-item" href="admin.php"><i class="bi bi-shield-lock me-2"></i>Admin</a>
+                                    </li>
+                                <?php endif; ?>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <a class="dropdown-item text-danger" href="<?php echo e($logoutUrl); ?>"><i class="bi bi-box-arrow-right me-2"></i>Déconnexion</a>
+                                </li>
+                            </ul>
+                        </li>
+                    <?php else: ?>
+                        <li class="nav-item"><a class="nav-link" href="<?php echo e($loginUrl); ?>">Connexion</a></li>
+                        <li class="nav-item"><a class="nav-link" href="<?php echo e($registerUrl); ?>">Inscription</a></li>
+                    <?php endif; ?>
+                </ul>
+            </div>
         </div>
     </div>
 </nav>
