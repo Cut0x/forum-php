@@ -75,6 +75,7 @@
     display: flex;
     align-items: center;
     gap: 12px;
+    margin-left: auto;
 }
 
 .navbar-actions .navbar-nav {
@@ -93,6 +94,20 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+.forum-navbar .navbar-collapse {
+    gap: 16px;
+}
+
+.forum-navbar .navbar-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.forum-navbar .dropdown-toggle::after {
+    margin-left: 6px;
 }
 
 .card,
@@ -414,6 +429,8 @@ pre,
         align-items: stretch;
         gap: 0;
         padding-top: 8px;
+        border-top: 1px solid rgba(148,163,184,0.2);
+        margin-top: 8px;
     }
     .navbar-actions .navbar-nav {
         flex-direction: column;

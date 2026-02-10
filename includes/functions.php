@@ -552,8 +552,35 @@ function set_setting(PDO $pdo, string $key, string $value): void
     $stmt->execute([$key, $value]);
 }
 
+function user_notifications_enabled(PDO $pdo, ?int $userId): bool
+{
+    if (!$userId) {
+        return false;
+    }
+
+    static $hasColumn = null;
+    if ($hasColumn === null) {
+        $hasColumn = column_exists($pdo, 'users', 'notifications_enabled');
+    }
+    if (!$hasColumn) {
+        return true;
+    }
+
+    $stmt = $pdo->prepare('SELECT notifications_enabled FROM users WHERE id = ?');
+    $stmt->execute([$userId]);
+    $value = $stmt->fetchColumn();
+    if ($value === false) {
+        return true;
+    }
+    return (int) $value === 1;
+}
+
 function create_notification(PDO $pdo, int $userId, string $type, string $message, ?int $topicId = null, ?int $postId = null, ?int $actorId = null): void
 {
+    if (!user_notifications_enabled($pdo, $userId)) {
+        return;
+    }
+
     $stmt = $pdo->prepare('INSERT INTO notifications (user_id, actor_id, type, message, topic_id, post_id) VALUES (?, ?, ?, ?, ?, ?)');
     $stmt->execute([$userId, $actorId, $type, $message, $topicId, $postId]);
 

@@ -7,11 +7,15 @@ $displayName = current_user_name() ?? $username;
 $role = current_user_role();
 $theme = current_theme();
 $notifCount = 0;
+$notificationsEnabled = true;
 
 if ($pdo && $isLogged) {
-    $stmt = $pdo->prepare('SELECT COUNT(*) FROM notifications WHERE user_id = ? AND is_read = 0');
-    $stmt->execute([current_user_id()]);
-    $notifCount = (int) $stmt->fetchColumn();
+    $notificationsEnabled = user_notifications_enabled($pdo, current_user_id());
+    if ($notificationsEnabled) {
+        $stmt = $pdo->prepare('SELECT COUNT(*) FROM notifications WHERE user_id = ? AND is_read = 0');
+        $stmt->execute([current_user_id()]);
+        $notifCount = (int) $stmt->fetchColumn();
+    }
     $appName = get_setting($pdo, 'site_title', $appName) ?? $appName;
 }
 
@@ -122,8 +126,14 @@ $logoutUrl = 'logout.php' . ($redirectParam ? '?redirect_to=' . rawurlencode($re
                     <?php if ($isLogged): ?>
                         <li class="nav-item">
                             <a class="nav-link position-relative d-flex align-items-center gap-2" href="notifications.php">
-                                <i class="bi bi-bell"></i>
-                                <span class="d-lg-none">Notifications</span>
+                                <?php if ($notificationsEnabled): ?>
+                                    <i class="bi bi-bell"></i>
+                                <?php else: ?>
+                                    <i class="bi bi-bell-slash"></i>
+                                <?php endif; ?>
+                                <span class="d-lg-none">
+                                    Notifications<?php echo $notificationsEnabled ? '' : ' (désactivées)'; ?>
+                                </span>
                                 <?php if ($notifCount > 0): ?>
                                     <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
                                         <?php echo e((string) $notifCount); ?>
@@ -147,6 +157,9 @@ $logoutUrl = 'logout.php' . ($redirectParam ? '?redirect_to=' . rawurlencode($re
                                 </li>
                                 <li>
                                     <a class="dropdown-item" href="profile.php"><i class="bi bi-person me-2"></i>Profil</a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="settings.php"><i class="bi bi-gear me-2"></i>Paramètres</a>
                                 </li>
                                 <?php if (is_admin()): ?>
                                     <li>
