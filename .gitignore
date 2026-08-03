@@ -4,3 +4,4 @@
 composer.json
 composer.lock
 migrate.php
+/assets/emotes
