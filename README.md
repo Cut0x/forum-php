@@ -1,124 +1,114 @@
-# Forum PHP
+# Forum
 
-Template de forum PHP + MySQL (PDO) avec Bootstrap.
+Forum communautaire en Laravel + Tailwind CSS + Alpine.js, avec panel d'administration et panel de modération séparés.
 
 ## Sommaire
 1. Prérequis
-2. Installation rapide
+2. Installation
 3. Configuration
-4. Configuration Nginx (VPS)
-5. Configuration Apache (VPS)
-6. Importer la base de données
-7. Créer le compte admin
-8. Sécurité et production
-9. Dépannage
+4. Compte administrateur
+5. Configuration Apache/XAMPP (production locale)
+6. Fonctionnalités
+7. Tests
 
 ## 1. Prérequis
-- PHP 8.1+
+- PHP 8.3+ avec extensions : pdo_mysql, mbstring, openssl, fileinfo, gd
+- Composer 2
+- Node.js 18+ et npm
 - MySQL 8 ou MariaDB 10.4+
-- Extensions PHP: pdo_mysql, mbstring, openssl, fileinfo
-- Serveur web: Nginx ou Apache
 
-## 2. Installation rapide
-1. Copier le projet dans votre serveur web.
-2. Copier `exemple.config.php` vers `config.php`.
-3. Importer `schema.sql` dans votre base.
-4. Ouvrir le site et créer l'admin via `setup-admin.php`.
+## 2. Installation
+
+```bash
+composer install
+npm install
+
+cp .env.example .env
+php artisan key:generate
+```
+
+Éditez `.env` et renseignez vos identifiants MySQL (`DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`), puis créez la base :
+
+```bash
+mysql -u root -e "CREATE DATABASE forum CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+```
+
+Migrations, données de base et lien de stockage :
+
+```bash
+php artisan migrate --seed
+php artisan storage:link
+```
+
+Le seeder par défaut crée les catégories, badges et réglages de base (sans contenu de démonstration). Pour peupler le forum avec des utilisateurs/sujets/messages factices en local :
+
+```bash
+php artisan db:seed --class=DemoContentSeeder
+```
+
+Build des assets (Tailwind + Alpine via Vite) :
+
+```bash
+npm run build   # une fois
+npm run dev     # en développement, avec hot-reload
+```
+
+Lancer le serveur de développement :
+
+```bash
+php artisan serve
+```
+
+Le site est alors accessible sur `http://127.0.0.1:8000`.
 
 ## 3. Configuration
-Editez `config.php`.
 
-Exemple:
-```php
-<?php
-return [
-    'app' => [
-        'name' => 'Forum PHP',
-        'base_url' => 'https://votre-domaine.tld',
-        'uploads_dir' => __DIR__ . '/uploads',
-    ],
-    'db' => [
-        'host' => '127.0.0.1',
-        'name' => 'forum_php',
-        'user' => 'db_user',
-        'pass' => 'db_pass',
-        'charset' => 'utf8mb4',
-    ],
-    'mail' => [
-        'enabled' => false,
-        'host' => 'smtp.example.com',
-        'user' => 'user@example.com',
-        'pass' => 'password',
-        'port' => 587,
-        'from' => 'no-reply@example.com',
-    ],
-    'hcaptcha' => [
-        'enabled' => false,
-        'site_key' => '',
-        'secret' => '',
-    ],
-];
+Toute la configuration applicative (hors thème) passe par `.env`. Les réglages éditables depuis l'admin (titre du site, couleurs, police, footer, lien de soutien…) sont stockés en base et gérés dans `/admin`.
+
+- `APP_URL` doit correspondre à l'URL réellement utilisée (impacte les liens absolus, l'upload d'images, etc.).
+- `MAIL_MAILER=log` par défaut : les emails (notifications, avertissements) sont écrits dans `storage/logs/laravel.log`. Configurez un vrai transport SMTP en production.
+
+## 4. Compte administrateur
+
+Créez ou promouvez un compte administrateur avec :
+
+```bash
+php artisan app:create-admin
 ```
 
-## 4. Configuration Nginx (VPS)
-Exemple de vhost:
-```
-server {
-    listen 80;
-    server_name votre-domaine.tld;
+La commande demande un email : si le compte existe déjà, il est promu admin ; sinon elle crée le compte.
 
-    root /var/www/forum-php;
-    index index.php;
+## 5. Configuration Apache/XAMPP (production locale)
 
-    location / {
-        try_files $uri $uri/ /index.php?$query_string;
-    }
+Laravel sert l'application depuis le dossier `public/`, ne pointez jamais un vhost directement sur la racine du projet. Deux options :
 
-    location ~ \.php$ {
-        include snippets/fastcgi-php.conf;
-        fastcgi_pass unix:/run/php/php8.2-fpm.sock;
-    }
+**Option recommandée : vhost dédié**
 
-    location ~* \.(jpg|jpeg|png|gif|svg|css|js)$ {
-        expires 7d;
-    }
-}
-```
-
-## 5. Configuration Apache (VPS)
-Assurez-vous que `mod_rewrite` est actif.
-
-Exemple de vhost:
-```
+```apache
 <VirtualHost *:80>
-    ServerName votre-domaine.tld
-    DocumentRoot /var/www/forum-php
+    ServerName forum.local
+    DocumentRoot "C:/Users/loic/Documents/Xampp/htdocs/forum-php/public"
 
-    <Directory /var/www/forum-php>
+    <Directory "C:/Users/loic/Documents/Xampp/htdocs/forum-php/public">
         AllowOverride All
         Require all granted
     </Directory>
-
-    <FilesMatch \.php$>
-        SetHandler "proxy:unix:/run/php/php8.2-fpm.sock|fcgi://localhost/"
-    </FilesMatch>
 </VirtualHost>
 ```
 
-## 6. Importer la base de données
-1. Créez la base et importez `schema.sql`.
-2. Vérifiez que les tables sont présentes.
+Ajoutez `127.0.0.1 forum.local` à votre fichier hosts, puis réglez `APP_URL=http://forum.local` dans `.env`.
 
-## 7. Créer le compte admin
-Ouvrez `setup-admin.php` une seule fois.
-Une fois créé, supprimez ou bloquez ce fichier.
+**Option rapide (dev uniquement) :** `php artisan serve` (voir section 2), pas de configuration Apache nécessaire.
 
-## 8. Sécurité et production
-- Désactivez l'affichage des erreurs en production.
-- Configurez HTTPS.
-- Vérifiez les permissions du dossier `uploads/`.
+## 6. Fonctionnalités
 
-## 9. Dépannage
-- Erreur BDD: vérifiez `config.php`.
-- Upload avatar: vérifiez l'extension PHP GD.
-- Emails: activez `mail.enabled` et installez PHPMailer.
+- Catégories, sujets, messages en Markdown (mentions `@pseudo`, émotes `:nom:`, images), votes, badges, notifications.
+- Profils (avatar, bio, liens), paramètres de compte (email, mot de passe, export de données, suppression de compte).
+- **Panel admin** (`/admin`, rôle `admin`) : réglages du site, thème (couleurs clair/sombre, police, presets), catégories, footer, badges, émotes, gestion des rôles.
+- **Panel de modération** (`/moderation`, rôles `moderator` et `admin`) : file de signalements, verrouillage/épinglage/déplacement de sujets, suppression de messages, avertissements et suspensions temporaires d'utilisateurs, journal des actions.
+
+## 7. Tests
+
+```bash
+php artisan test
+```
