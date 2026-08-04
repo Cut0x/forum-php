@@ -75,7 +75,7 @@
 
         <div class="card border-red-300 p-5 dark:border-red-900">
             <h2 class="mb-2 text-sm font-semibold text-red-600">Zone dangereuse</h2>
-            <form method="post" action="{{ route('settings.destroy') }}" class="space-y-3" onsubmit="return confirm('Supprimer définitivement votre compte ?');">
+            <form method="post" action="{{ route('settings.destroy') }}" class="space-y-3">
                 @csrf @method('delete')
                 <div>
                     <label class="mb-1 block text-xs font-medium text-ink">Tapez SUPPRIMER pour confirmer</label>
@@ -87,7 +87,12 @@
                     <input type="password" name="current_password" class="field" required>
                     @error('current_password') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
                 </div>
-                <button type="submit" class="btn-danger">Supprimer mon compte</button>
+                <x-confirm-submit
+                    label="Supprimer mon compte"
+                    class="btn-danger"
+                    title="Supprimer définitivement votre compte ?"
+                    message="Votre profil, vos sujets et vos messages seront définitivement supprimés. Cette action est irréversible."
+                />
             </form>
         </div>
     </div>

@@ -12,7 +12,12 @@
             </form>
             <form method="post" action="{{ route('notifications.destroy-all', ['type' => $type]) }}" data-remote="replace" data-target="#notifications-panel">
                 @csrf @method('delete')
-                <x-confirm-submit label="Tout supprimer" class="btn-secondary" />
+                <x-confirm-submit
+                    label="Tout supprimer"
+                    class="btn-secondary"
+                    title="Supprimer toutes les notifications ?"
+                    message="Cette action est irréversible."
+                />
             </form>
         </div>
     </div>
