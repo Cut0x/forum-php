@@ -30,7 +30,11 @@
                     <strong class="text-ink">{{ $category->name }}</strong>
                     <form method="post" action="{{ route('admin.footer.categories.destroy', $category) }}" data-remote="replace" data-target="#footer-panel">
                         @csrf @method('delete')
-                        <x-confirm-submit class="text-sm text-muted hover:text-red-600" />
+                        <x-confirm-submit
+                            class="text-sm text-muted hover:text-red-600"
+                            :title="'Supprimer la catégorie « '.$category->name.' » ?'"
+                            message="Tous ses liens seront supprimés avec elle."
+                        />
                     </form>
                 </div>
                 <div class="mt-2 space-y-1">

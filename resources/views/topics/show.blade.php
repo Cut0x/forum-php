@@ -89,7 +89,10 @@
                 @if($canDeleteTopic)
                     <form method="post" action="{{ route('topics.destroy', $topic) }}">
                         @csrf @method('delete')
-                        <x-confirm-submit />
+                        <x-confirm-submit
+                            title="Supprimer ce sujet ?"
+                            message="Le sujet et tous ses messages seront définitivement supprimés."
+                        />
                     </form>
                 @endif
                 @if($canReport)

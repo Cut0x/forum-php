@@ -41,7 +41,12 @@
             @foreach($emotes as $emote)
                 <form method="post" action="{{ route('admin.emotes.destroy', $emote) }}" data-remote="replace" data-target="#emotes-panel">
                     @csrf @method('delete')
-                    <x-confirm-submit :label="'Supprimer :'.$emote->name.':'" class="text-xs text-muted hover:text-red-600" />
+                    <x-confirm-submit
+                        :label="'Supprimer :'.$emote->name.':'"
+                        class="text-xs text-muted hover:text-red-600"
+                        :title="'Supprimer l\'émote :'.$emote->name.': ?'"
+                        message="Elle ne sera plus utilisable dans les messages."
+                    />
                 </form>
             @endforeach
         </div>

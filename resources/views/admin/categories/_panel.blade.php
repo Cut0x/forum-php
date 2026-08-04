@@ -29,7 +29,10 @@
                         <button type="button" @click="editing = true" class="text-muted hover:text-ink">Éditer</button>
                         <form method="post" action="{{ route('admin.categories.destroy', $category) }}" data-remote="replace" data-target="#categories-panel">
                             @csrf @method('delete')
-                            <x-confirm-submit />
+                            <x-confirm-submit
+                                title="Supprimer la catégorie ?"
+                                :message="'« '.$category->name.' » sera définitivement supprimée, avec tous ses sujets.'"
+                            />
                         </form>
                     </div>
                 </div>

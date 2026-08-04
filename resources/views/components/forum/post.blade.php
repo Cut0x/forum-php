@@ -99,7 +99,10 @@
                             <form method="post" action="{{ route('posts.destroy', $post) }}" data-remote="remove" data-target="closest:article">
                                 @csrf
                                 @method('delete')
-                                <x-confirm-submit />
+                                <x-confirm-submit
+                                    title="Supprimer ce message ?"
+                                    message="Cette action est irréversible."
+                                />
                             </form>
                         @endif
                         @if($canReport)
