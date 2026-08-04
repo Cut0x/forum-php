@@ -1,0 +1,42 @@
+Forum PHP
+Copyright (c) 2026 Loic VALENCE (valloic.fr). All Rights Reserved.
+
+This product is licensed under the Common Public Attribution License
+Version 1.0 (CPAL-1.0). A copy of the license is available in the LICENSE
+file at the root of this repository, and online at:
+
+    https://opensource.org/license/cpal-1-0
+
+Attribution requirement (CPAL-1.0, Section 14, Exhibit B)
+-----------------------------------------------------------
+
+As a condition of using, modifying, deploying or distributing this
+software (including running it as a network service, per Section 15,
+"External Deployment"), the following Attribution Information must
+remain visible on the graphical user interface of every deployment,
+including any Modification or Larger Work built on top of it:
+
+    Attribution Copyright Notice: Copyright (c) 2026 Loic VALENCE (valloic.fr). All Rights Reserved.
+    Attribution Phrase:           Forum PHP, by Loic VALENCE (valloic.fr)
+    Attribution URL:              https://valloic.fr
+
+In this project, that Attribution Information is displayed in the
+footer of every page (public forum, admin panel and moderation panel).
+Removing, hiding or altering this attribution is a violation of the
+license and is not permitted.
+
+Original author and maintainer
+-------------------------------
+
+Loic VALENCE
+Website: https://valloic.fr
+GitHub:  https://github.com/Cut0x
+
+Third-party components
+-----------------------
+
+This project is built on top of open-source software, including but
+not limited to Laravel, Tailwind CSS and Alpine.js. Each of these
+components remains governed by its own license, as declared in
+composer.json and package.json. This NOTICE file does not modify or
+supersede the license terms of those third-party components.

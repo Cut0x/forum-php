@@ -36,11 +36,11 @@
                     </div>
                     @if($status === 'pending')
                         <div class="flex shrink-0 gap-2">
-                            <form method="post" action="{{ route('moderation.reports.resolve', $report) }}">
+                            <form method="post" action="{{ route('moderation.reports.resolve', $report) }}" data-remote="remove" data-target="closest:div.p-4">
                                 @csrf @method('patch')
                                 <button type="submit" class="btn-secondary">Traiter</button>
                             </form>
-                            <form method="post" action="{{ route('moderation.reports.dismiss', $report) }}">
+                            <form method="post" action="{{ route('moderation.reports.dismiss', $report) }}" data-remote="remove" data-target="closest:div.p-4">
                                 @csrf @method('patch')
                                 <button type="submit" class="btn-ghost">Rejeter</button>
                             </form>

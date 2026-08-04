@@ -36,7 +36,7 @@
 
                     @if($canEdit)
                         <div x-show="editing" x-cloak class="space-y-2">
-                            <form method="post" action="{{ route('posts.update', $post) }}">
+                            <form method="post" action="{{ route('posts.update', $post) }}" data-remote="replace" data-target="closest:article">
                                 @csrf
                                 @method('patch')
                                 <x-editor name="content" :value="$post->content" rows="4" />
@@ -53,22 +53,39 @@
             @if(!$deleted)
                 <div class="mt-3 flex items-center gap-3">
                     @if($canVote)
-                        <div class="flex items-center gap-1">
-                            <form method="post" action="{{ route('posts.vote', $post) }}">
-                                @csrf
-                                <input type="hidden" name="value" value="1">
-                                <button type="submit" class="btn-ghost !px-1.5 !py-1 {{ $userVote === 1 ? 'text-brand' : '' }}" aria-label="Vote positif">
-                                    <x-icon name="thumb-up" class="h-4 w-4" />
-                                </button>
-                            </form>
-                            <span class="min-w-4 text-center text-xs font-medium text-muted">{{ $post->score ?? 0 }}</span>
-                            <form method="post" action="{{ route('posts.vote', $post) }}">
-                                @csrf
-                                <input type="hidden" name="value" value="-1">
-                                <button type="submit" class="btn-ghost !px-1.5 !py-1 {{ $userVote === -1 ? 'text-red-600' : '' }}" aria-label="Vote négatif">
-                                    <x-icon name="thumb-down" class="h-4 w-4" />
-                                </button>
-                            </form>
+                        <div
+                            x-data="{
+                                score: {{ $post->score ?? 0 }},
+                                value: {{ $userVote ?? 'null' }},
+                                loading: false,
+                                vote(v) {
+                                    if (this.loading) return;
+                                    this.loading = true;
+                                    fetch('{{ route('posts.vote', $post) }}', {
+                                        method: 'POST',
+                                        headers: {
+                                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                            'X-Requested-With': 'XMLHttpRequest',
+                                            'Accept': 'application/json',
+                                            'Content-Type': 'application/x-www-form-urlencoded',
+                                        },
+                                        body: 'value=' + v,
+                                    })
+                                        .then(r => r.ok ? r.json() : Promise.reject())
+                                        .then(data => { this.score = data.score; this.value = data.value; })
+                                        .catch(() => window.dispatchEvent(new CustomEvent('toast', { detail: { message: 'Impossible d\'enregistrer le vote.', type: 'error' } })))
+                                        .finally(() => { this.loading = false; });
+                                },
+                            }"
+                            class="flex items-center gap-1"
+                        >
+                            <button type="button" @click="vote(1)" :disabled="loading" class="btn-ghost !px-1.5 !py-1" :class="value === 1 ? '!text-brand' : ''" aria-label="Vote positif">
+                                <x-icon name="thumb-up" class="h-4 w-4" />
+                            </button>
+                            <span class="min-w-4 text-center text-xs font-medium text-muted" x-text="score"></span>
+                            <button type="button" @click="vote(-1)" :disabled="loading" class="btn-ghost !px-1.5 !py-1" :class="value === -1 ? '!text-red-600' : ''" aria-label="Vote négatif">
+                                <x-icon name="thumb-down" class="h-4 w-4" />
+                            </button>
                         </div>
                     @else
                         <span class="text-xs text-muted">{{ $post->score ?? 0 }} point{{ abs($post->score ?? 0) > 1 ? 's' : '' }}</span>
@@ -79,10 +96,10 @@
                             <button type="button" x-data @click="$dispatch('edit-post-{{ $post->id }}')" class="text-muted hover:text-ink">Modifier</button>
                         @endif
                         @if($canDelete)
-                            <form method="post" action="{{ route('posts.destroy', $post) }}" onsubmit="return confirm('Supprimer ce message ?');">
+                            <form method="post" action="{{ route('posts.destroy', $post) }}" data-remote="remove" data-target="closest:article">
                                 @csrf
                                 @method('delete')
-                                <button type="submit" class="text-muted hover:text-red-600">Supprimer</button>
+                                <x-confirm-submit />
                             </form>
                         @endif
                         @if($canReport)

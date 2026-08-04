@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Support\Settings;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\View\View;
 
 class SettingsController extends Controller
@@ -15,7 +16,7 @@ class SettingsController extends Controller
         return view('admin.settings');
     }
 
-    public function update(Request $request): RedirectResponse
+    public function update(Request $request): RedirectResponse|Response
     {
         $data = $request->validate([
             'site_title' => ['required', 'string', 'max:80'],
@@ -29,6 +30,10 @@ class SettingsController extends Controller
             ...$data,
             'stripe_enabled' => $request->boolean('stripe_enabled') ? '1' : '0',
         ]);
+
+        if ($request->ajax()) {
+            return $this->ajaxOk('Réglages mis à jour.');
+        }
 
         return back()->with('success', 'Réglages mis à jour.');
     }

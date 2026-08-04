@@ -56,7 +56,14 @@
         </form>
 
         <div class="ml-auto flex items-center gap-1.5">
-            <form action="{{ route('theme.toggle') }}" method="post">
+            <form
+                action="{{ route('theme.toggle') }}"
+                method="post"
+                @submit.prevent="
+                    document.documentElement.dataset.theme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+                    fetch($el.action, { method: 'POST', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'X-Requested-With': 'XMLHttpRequest' } });
+                "
+            >
                 @csrf
                 <button type="submit" class="btn-ghost !px-2 !py-2" aria-label="Changer de thème">
                     <x-icon name="moon" class="h-5 w-5 dark:hidden" />
@@ -65,13 +72,15 @@
             </form>
 
             @auth
-                <a href="{{ route('notifications.index') }}" class="btn-ghost relative !px-2 !py-2" aria-label="Notifications">
+                <a
+                    href="{{ route('notifications.index') }}"
+                    class="btn-ghost relative !px-2 !py-2"
+                    aria-label="Notifications"
+                    x-data="{ count: {{ (int) $unreadNotificationsCount }} }"
+                    @unread-count.window="count = $event.detail.count"
+                >
                     <x-icon name="{{ auth()->user()->notifications_enabled ? 'bell' : 'bell-slash' }}" class="h-5 w-5" />
-                    @if($unreadNotificationsCount > 0)
-                        <span class="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-semibold text-white">
-                            {{ $unreadNotificationsCount > 9 ? '9+' : $unreadNotificationsCount }}
-                        </span>
-                    @endif
+                    <span x-show="count > 0" x-cloak class="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-semibold text-white" x-text="count > 9 ? '9+' : count"></span>
                 </a>
 
                 <div class="relative" x-data="{ open: false }">
@@ -165,12 +174,40 @@
                 </div>
             @endforeach
         </div>
-        <div class="mt-8 flex items-center justify-between border-t border-ink/10 pt-4 text-xs text-muted">
+        <div class="mt-8 flex flex-wrap items-center justify-between gap-2 border-t border-ink/10 pt-4 text-xs text-muted">
             <span>&copy; {{ date('Y') }} {{ $siteSettings['footer_text'] }}</span>
-            <a href="{{ route('sitemap') }}" class="hover:text-ink">Sitemap</a>
+            <div class="flex items-center gap-3">
+                <x-license-credit />
+                <a href="{{ route('sitemap') }}" class="hover:text-ink">Sitemap</a>
+            </div>
         </div>
     </div>
 </footer>
+
+<div
+    x-data="{ toasts: [] }"
+    @toast.window="
+        const id = Date.now() + Math.random();
+        toasts.push({ id, message: $event.detail.message, type: $event.detail.type });
+        setTimeout(() => { toasts = toasts.filter(t => t.id !== id) }, 4000);
+    "
+    class="pointer-events-none fixed inset-x-0 bottom-4 z-50 flex flex-col items-center gap-2 px-4 sm:items-end sm:right-4 sm:left-auto"
+>
+    <template x-for="toast in toasts" :key="toast.id">
+        <div
+            x-show="true"
+            x-transition:enter="transition ease-out duration-200"
+            x-transition:enter-start="opacity-0 translate-y-2"
+            x-transition:enter-end="opacity-100 translate-y-0"
+            x-transition:leave="transition ease-in duration-150"
+            x-transition:leave-start="opacity-100"
+            x-transition:leave-end="opacity-0"
+            class="pointer-events-auto max-w-sm rounded-lg px-4 py-2.5 text-sm font-medium text-white shadow-lg"
+            :class="toast.type === 'error' ? 'bg-red-600' : 'bg-emerald-600'"
+            x-text="toast.message"
+        ></div>
+    </template>
+</div>
 
 </body>
 </html>

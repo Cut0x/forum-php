@@ -11,6 +11,7 @@ use App\Notifications\AccountSuspended;
 use App\Notifications\AccountWarned;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\View\View;
 
 class UserModerationController extends Controller
@@ -29,7 +30,7 @@ class UserModerationController extends Controller
         return view('moderation.users.index', compact('users', 'query'));
     }
 
-    public function warn(Request $request, User $user): RedirectResponse
+    public function warn(Request $request, User $user): RedirectResponse|Response
     {
         $this->authorize('moderate', $user);
 
@@ -44,10 +45,10 @@ class UserModerationController extends Controller
         $user->notify(new AccountWarned($warning));
         ModerationAction::log($request->user(), 'warn', $user, ['reason' => $data['reason']]);
 
-        return back()->with('success', 'Avertissement envoyé.');
+        return $this->respond($request, $user, 'Avertissement envoyé.');
     }
 
-    public function suspend(Request $request, User $user): RedirectResponse
+    public function suspend(Request $request, User $user): RedirectResponse|Response
     {
         $this->authorize('moderate', $user);
 
@@ -70,10 +71,10 @@ class UserModerationController extends Controller
         $user->notify(new AccountSuspended($suspension));
         ModerationAction::log($request->user(), 'suspend', $user, ['reason' => $data['reason'], 'ends_at' => $endsAt->toDateTimeString()]);
 
-        return back()->with('success', 'Utilisateur suspendu jusqu\'au '.$endsAt->format('d/m/Y').'.');
+        return $this->respond($request, $user, 'Utilisateur suspendu jusqu\'au '.$endsAt->format('d/m/Y').'.');
     }
 
-    public function unsuspend(Request $request, User $user): RedirectResponse
+    public function unsuspend(Request $request, User $user): RedirectResponse|Response
     {
         $this->authorize('moderate', $user);
 
@@ -81,6 +82,17 @@ class UserModerationController extends Controller
         $user->suspensions()->whereNull('lifted_at')->update(['lifted_at' => now()]);
         ModerationAction::log($request->user(), 'unsuspend', $user);
 
-        return back()->with('success', 'Suspension levée.');
+        return $this->respond($request, $user, 'Suspension levée.');
+    }
+
+    protected function respond(Request $request, User $user, string $message): RedirectResponse|Response
+    {
+        if ($request->ajax()) {
+            $user->loadCount(['warnings', 'suspensions']);
+
+            return $this->fragment(view('moderation.users._card', ['user' => $user]), $message);
+        }
+
+        return back()->with('success', $message);
     }
 }
