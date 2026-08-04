@@ -1,6 +1,14 @@
-# Forum
+# Forum PHP
 
 Forum communautaire en Laravel + Tailwind CSS + Alpine.js, avec panel d'administration et panel de modération séparés.
+
+Auteur et mainteneur : **Loic VALENCE** ([valloic.fr](https://valloic.fr))
+
+## Documentation complète
+
+Ce README couvre une installation locale rapide. Pour un guide complet (prérequis détaillés, installation locale pas à pas, mise en production avec Apache, mise en production avec Nginx, dépannage), consultez le wiki du projet :
+
+https://github.com/Cut0x/forum-php/wiki
 
 ## Sommaire
 1. Prérequis
@@ -10,6 +18,7 @@ Forum communautaire en Laravel + Tailwind CSS + Alpine.js, avec panel d'administ
 5. Configuration Apache/XAMPP (production locale)
 6. Fonctionnalités
 7. Tests
+8. Licence
 
 ## 1. Prérequis
 - PHP 8.3+ avec extensions : pdo_mysql, mbstring, openssl, fileinfo, gd
@@ -100,6 +109,8 @@ Ajoutez `127.0.0.1 forum.local` à votre fichier hosts, puis réglez `APP_URL=ht
 
 **Option rapide (dev uniquement) :** `php artisan serve` (voir section 2), pas de configuration Apache nécessaire.
 
+Pour un déploiement en production réel (serveur Linux, Apache ou Nginx, HTTPS, file d'attente, cron, permissions), suivez le guide dédié du wiki plutôt que cette section, qui ne couvre que l'usage local sous XAMPP.
+
 ## 6. Fonctionnalités
 
 - Catégories, sujets, messages en Markdown (mentions `@pseudo`, émotes `:nom:`, images), votes, badges, notifications.
@@ -112,3 +123,15 @@ Ajoutez `127.0.0.1 forum.local` à votre fichier hosts, puis réglez `APP_URL=ht
 ```bash
 php artisan test
 ```
+
+## 8. Licence
+
+Ce projet est distribué sous licence **Common Public Attribution License 1.0 (CPAL-1.0)**, disponible dans le fichier [LICENSE](LICENSE) et en ligne sur https://opensource.org/license/cpal-1-0.
+
+La CPAL est une licence open source. Elle impose en particulier une clause d'attribution (article 14) : toute utilisation, modification ou mise à disposition du logiciel, y compris en tant que service accessible sur un réseau, doit conserver visible sur l'interface l'information d'attribution suivante, définie dans le fichier [LICENSE](LICENSE) (Exhibit B) et rappelée dans [NOTICE](NOTICE) :
+
+> Forum PHP, par Loic VALENCE ([valloic.fr](https://valloic.fr))
+
+Cette attribution est affichée dans le pied de page de chaque page de l'application (forum public, panel admin, panel de modération, pages d'authentification). Elle ne doit pas être retirée, masquée ou modifiée dans les versions dérivées ou déployées de ce projet.
+
+Copyright (c) 2026 Loic VALENCE. Tous droits réservés.

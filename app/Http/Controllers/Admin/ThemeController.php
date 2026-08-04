@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Support\Settings;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\View\View;
 
 class ThemeController extends Controller
@@ -18,13 +19,10 @@ class ThemeController extends Controller
 
     public function edit(): View
     {
-        $theme = collect(self::KEYS)->mapWithKeys(fn ($key) => [$key => Settings::get($key, config("theme.defaults.$key"))]);
-        $presets = config('theme.presets');
-
-        return view('admin.theme', compact('theme', 'presets'));
+        return view('admin.theme', $this->theme());
     }
 
-    public function update(Request $request): RedirectResponse
+    public function update(Request $request): RedirectResponse|Response
     {
         $data = $request->validate([
             'theme_light_bg' => ['required', 'string', 'max:20'],
@@ -44,28 +42,52 @@ class ThemeController extends Controller
 
         Settings::setMany($data);
 
+        if ($request->ajax()) {
+            return $this->ajaxOk('Thème mis à jour.');
+        }
+
         return back()->with('success', 'Thème mis à jour.');
     }
 
-    public function preset(Request $request): RedirectResponse
+    public function preset(Request $request): RedirectResponse|Response
     {
         $data = $request->validate(['preset' => ['required', 'string']]);
         $preset = config('theme.presets.'.$data['preset']);
 
         if (! $preset) {
+            if ($request->ajax()) {
+                return $this->fragment(view('admin.theme._panel', $this->theme()), 'Preset introuvable.', 'error');
+            }
+
             return back()->with('error', 'Preset introuvable.');
         }
 
         Settings::setMany($preset['colors']);
 
+        if ($request->ajax()) {
+            return $this->fragment(view('admin.theme._panel', $this->theme()), 'Preset appliqué.');
+        }
+
         return back()->with('success', 'Preset appliqué.');
     }
 
-    public function reset(): RedirectResponse
+    public function reset(Request $request): RedirectResponse|Response
     {
         $defaults = collect(config('theme.defaults'))->only(self::KEYS)->all();
         Settings::setMany($defaults);
 
+        if ($request->ajax()) {
+            return $this->fragment(view('admin.theme._panel', $this->theme()), 'Thème réinitialisé.');
+        }
+
         return back()->with('success', 'Thème réinitialisé.');
+    }
+
+    protected function theme(): array
+    {
+        return [
+            'theme' => collect(self::KEYS)->mapWithKeys(fn ($key) => [$key => Settings::get($key, config("theme.defaults.$key"))]),
+            'presets' => config('theme.presets'),
+        ];
     }
 }

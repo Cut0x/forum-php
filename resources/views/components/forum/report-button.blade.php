@@ -5,7 +5,7 @@
         Signaler
     </button>
     <div x-show="open" x-cloak x-transition class="card absolute right-0 z-10 mt-2 w-56 p-3 text-left shadow-lg">
-        <form method="post" action="{{ route($route, $reportable) }}">
+        <form method="post" action="{{ route($route, $reportable) }}" data-remote="none" @submit="open = false">
             @csrf
             <label class="text-xs font-medium text-ink">Raison</label>
             <select name="reason" class="field mt-1 text-xs" required>

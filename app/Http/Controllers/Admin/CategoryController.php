@@ -6,18 +6,17 @@ use App\Http\Controllers\Controller;
 use App\Models\Category;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\View\View;
 
 class CategoryController extends Controller
 {
     public function index(): View
     {
-        $categories = Category::query()->orderBy('sort_order')->orderBy('name')->get();
-
-        return view('admin.categories', compact('categories'));
+        return view('admin.categories', ['categories' => $this->all()]);
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request): RedirectResponse|Response
     {
         $data = $request->validate([
             'name' => ['required', 'string', 'max:80'],
@@ -34,10 +33,10 @@ class CategoryController extends Controller
             'is_pinned' => $request->boolean('is_pinned'),
         ]);
 
-        return back()->with('success', 'Catégorie créée.');
+        return $this->respond($request, 'Catégorie créée.');
     }
 
-    public function update(Request $request, Category $category): RedirectResponse
+    public function update(Request $request, Category $category): RedirectResponse|Response
     {
         $data = $request->validate([
             'name' => ['required', 'string', 'max:80'],
@@ -56,13 +55,27 @@ class CategoryController extends Controller
             'is_pinned' => $request->boolean('is_pinned'),
         ]);
 
-        return back()->with('success', 'Catégorie mise à jour.');
+        return $this->respond($request, 'Catégorie mise à jour.');
     }
 
-    public function destroy(Category $category): RedirectResponse
+    public function destroy(Request $request, Category $category): RedirectResponse|Response
     {
         $category->delete();
 
-        return back()->with('success', 'Catégorie supprimée.');
+        return $this->respond($request, 'Catégorie supprimée.');
+    }
+
+    protected function all()
+    {
+        return Category::query()->orderBy('sort_order')->orderBy('name')->get();
+    }
+
+    protected function respond(Request $request, string $message): RedirectResponse|Response
+    {
+        if ($request->ajax()) {
+            return $this->fragment(view('admin.categories._panel', ['categories' => $this->all()]), $message);
+        }
+
+        return back()->with('success', $message);
     }
 }

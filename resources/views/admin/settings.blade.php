@@ -1,5 +1,5 @@
 <x-admin-layout title="Réglages du site" active="settings">
-    <form method="post" action="{{ route('admin.settings.update') }}" class="card space-y-4 p-5">
+    <form method="post" action="{{ route('admin.settings.update') }}" class="card space-y-4 p-5" data-remote="none">
         @csrf @method('patch')
 
         <div class="grid gap-4 sm:grid-cols-2">

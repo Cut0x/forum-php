@@ -6,18 +6,17 @@ use App\Http\Controllers\Controller;
 use App\Models\Badge;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\View\View;
 
 class BadgeController extends Controller
 {
     public function index(): View
     {
-        $badges = Badge::query()->orderBy('name')->get();
-
-        return view('admin.badges', compact('badges'));
+        return view('admin.badges', ['badges' => $this->all()]);
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request): RedirectResponse|Response
     {
         $data = $request->validate([
             'name' => ['required', 'string', 'max:80'],
@@ -28,10 +27,10 @@ class BadgeController extends Controller
 
         Badge::query()->create($data);
 
-        return back()->with('success', 'Badge créé.');
+        return $this->respond($request, 'Badge créé.');
     }
 
-    public function update(Request $request, Badge $badge): RedirectResponse
+    public function update(Request $request, Badge $badge): RedirectResponse|Response
     {
         $data = $request->validate([
             'name' => ['required', 'string', 'max:80'],
@@ -42,13 +41,27 @@ class BadgeController extends Controller
 
         $badge->update($data);
 
-        return back()->with('success', 'Badge mis à jour.');
+        return $this->respond($request, 'Badge mis à jour.');
     }
 
-    public function destroy(Badge $badge): RedirectResponse
+    public function destroy(Request $request, Badge $badge): RedirectResponse|Response
     {
         $badge->delete();
 
-        return back()->with('success', 'Badge supprimé.');
+        return $this->respond($request, 'Badge supprimé.');
+    }
+
+    protected function all()
+    {
+        return Badge::query()->orderBy('name')->get();
+    }
+
+    protected function respond(Request $request, string $message): RedirectResponse|Response
+    {
+        if ($request->ajax()) {
+            return $this->fragment(view('admin.badges._panel', ['badges' => $this->all()]), $message);
+        }
+
+        return back()->with('success', $message);
     }
 }

@@ -7,6 +7,7 @@ use App\Notifications\ReplyPosted;
 use App\Notifications\UserMentioned;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\View\View;
 
 class NotificationController extends Controller
@@ -18,6 +19,52 @@ class NotificationController extends Controller
     ];
 
     public function index(Request $request): View
+    {
+        return view('notifications.index', $this->panelData($request));
+    }
+
+    public function readAll(Request $request): RedirectResponse|Response
+    {
+        $request->user()->unreadNotifications()->update(['read_at' => now()]);
+
+        if ($request->ajax()) {
+            return $this->fragment(view('notifications._panel', $this->panelData($request)), 'Notifications marquées comme lues.')
+                ->header('X-Unread-Count', (string) $request->user()->unreadNotifications()->count());
+        }
+
+        return back()->with('success', 'Notifications marquées comme lues.');
+    }
+
+    public function destroy(Request $request, string $notification): RedirectResponse|Response
+    {
+        $request->user()->notifications()->where('id', $notification)->delete();
+
+        if ($request->ajax()) {
+            return $this->fragment(view('notifications._panel', $this->panelData($request)), 'Notification supprimée.')
+                ->header('X-Unread-Count', (string) $request->user()->unreadNotifications()->count());
+        }
+
+        return back()->with('success', 'Notification supprimée.');
+    }
+
+    public function destroyAll(Request $request): RedirectResponse|Response
+    {
+        $type = $request->query('type', 'all');
+        $query = $request->user()->notifications();
+        if (isset(self::TYPES[$type])) {
+            $query->where('type', self::TYPES[$type]);
+        }
+        $query->delete();
+
+        if ($request->ajax()) {
+            return $this->fragment(view('notifications._panel', $this->panelData($request)), 'Notifications supprimées.')
+                ->header('X-Unread-Count', (string) $request->user()->unreadNotifications()->count());
+        }
+
+        return back()->with('success', 'Notifications supprimées.');
+    }
+
+    protected function panelData(Request $request): array
     {
         $type = $request->query('type', 'all');
         $user = $request->user();
@@ -33,27 +80,6 @@ class NotificationController extends Controller
             $key => $user->unreadNotifications()->where('type', $class)->count(),
         ]);
 
-        return view('notifications.index', compact('notifications', 'type', 'counts'));
-    }
-
-    public function readAll(Request $request): RedirectResponse
-    {
-        $request->user()->unreadNotifications()->update(['read_at' => now()]);
-
-        return back()->with('success', 'Notifications marquées comme lues.');
-    }
-
-    public function destroy(Request $request, string $notification): RedirectResponse
-    {
-        $request->user()->notifications()->where('id', $notification)->delete();
-
-        return back()->with('success', 'Notification supprimée.');
-    }
-
-    public function destroyAll(Request $request): RedirectResponse
-    {
-        $request->user()->notifications()->delete();
-
-        return back()->with('success', 'Notifications supprimées.');
+        return compact('notifications', 'type', 'counts');
     }
 }

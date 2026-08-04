@@ -8,7 +8,9 @@ use App\Models\Category;
 use App\Models\Topic;
 use App\Services\BadgeAwarder;
 use App\Services\MentionNotifier;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class TopicController extends Controller
@@ -49,12 +51,16 @@ class TopicController extends Controller
         return redirect()->route('topics.show', $topic)->with('success', 'Sujet publié.');
     }
 
-    public function update(UpdateTopicRequest $request, Topic $topic): RedirectResponse
+    public function update(UpdateTopicRequest $request, Topic $topic): RedirectResponse|JsonResponse
     {
         $topic->update([
             'title' => $request->validated('title'),
             'edited_at' => now(),
         ]);
+
+        if ($request->ajax()) {
+            return response()->json(['title' => $topic->title]);
+        }
 
         return back()->with('success', 'Sujet mis à jour.');
     }

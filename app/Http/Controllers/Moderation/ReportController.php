@@ -7,6 +7,7 @@ use App\Models\Report;
 use App\Notifications\ReportResolved;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\View\View;
 
 class ReportController extends Controller
@@ -28,16 +29,24 @@ class ReportController extends Controller
         return view('moderation.reports.index', compact('reports', 'status'));
     }
 
-    public function resolve(Request $request, Report $report): RedirectResponse
+    public function resolve(Request $request, Report $report): RedirectResponse|Response
     {
         $this->closeReport($request, $report, Report::STATUS_RESOLVED);
+
+        if ($request->ajax()) {
+            return $this->ajaxOk('Signalement traité.');
+        }
 
         return back()->with('success', 'Signalement traité.');
     }
 
-    public function dismiss(Request $request, Report $report): RedirectResponse
+    public function dismiss(Request $request, Report $report): RedirectResponse|Response
     {
         $this->closeReport($request, $report, Report::STATUS_DISMISSED);
+
+        if ($request->ajax()) {
+            return $this->ajaxOk('Signalement rejeté.');
+        }
 
         return back()->with('success', 'Signalement rejeté.');
     }

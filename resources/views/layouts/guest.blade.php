@@ -41,5 +41,7 @@
     <div class="card w-full max-w-sm p-6">
         {{ $slot }}
     </div>
+
+    <x-license-credit class="mt-6 text-xs text-muted hover:text-ink" />
 </body>
 </html>
