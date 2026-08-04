@@ -6,6 +6,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Intervention\Image\Drivers\Gd\Driver;
+use Intervention\Image\Encoders\JpegEncoder;
 use Intervention\Image\ImageManager;
 
 class AvatarUploader
@@ -17,10 +18,10 @@ class AvatarUploader
     public function store(UploadedFile $file, int $userId): string
     {
         $manager = new ImageManager(Driver::class);
-        $image = $manager->read($file->getRealPath())->cover(256, 256);
+        $image = $manager->decodePath($file->getRealPath())->cover(256, 256);
 
         $filename = 'avatars/user_'.$userId.'_'.now()->timestamp.'_'.Str::random(6).'.jpg';
-        Storage::disk('public')->put($filename, (string) $image->toJpeg(90));
+        Storage::disk('public')->put($filename, (string) $image->encode(new JpegEncoder(quality: 90)));
 
         return $filename;
     }

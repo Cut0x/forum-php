@@ -3,10 +3,11 @@
         @csrf
         <h2 class="text-sm font-semibold text-ink">Nouvelle émote</h2>
         <div class="grid gap-3 sm:grid-cols-3">
-            <input type="text" name="name" placeholder="smile" required class="field">
-            <input type="text" name="title" placeholder="Titre (optionnel)" class="field">
+            <input type="text" name="name" value="{{ old('name') }}" placeholder="smile" required class="field">
+            <input type="text" name="title" value="{{ old('title') }}" placeholder="Titre (optionnel)" class="field">
             <input type="file" name="file" accept="image/png,image/jpeg,image/gif,image/webp" required class="text-sm text-muted">
         </div>
+        <p class="text-xs text-muted">Nom : lettres, chiffres, "_" et "-" uniquement (sans accents ni espaces). Image de 2 Mo maximum.</p>
         <label class="flex items-center gap-2 text-sm text-ink">
             <input type="checkbox" name="is_enabled" value="1" checked class="rounded border-ink/20"> Active
         </label>

@@ -64,7 +64,7 @@ body {
     }
 
     .emote {
-        @apply inline-block h-5 w-5 align-text-bottom;
+        @apply !m-0 !inline-block !h-[1.2em] !w-[1.2em] !border-0 !align-[-0.2em];
     }
 
     .mention {
