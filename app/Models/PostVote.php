@@ -9,10 +9,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 #[Fillable(['user_id', 'post_id', 'value'])]
 class PostVote extends Model
 {
-    public $incrementing = false;
-
-    protected $primaryKey = null;
-
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
