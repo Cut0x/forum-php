@@ -36,7 +36,7 @@
             @php
                 $link = isset($notification->data['topic_slug']) ? route('topics.show', $notification->data['topic_slug']) : '#';
             @endphp
-            <div class="flex items-start justify-between gap-3 px-4 py-3">
+            <div class="flex items-start justify-between gap-3 px-4 py-3 {{ $notification->read_at ? '' : 'bg-brand/5' }} hover:bg-ink/5">
                 <a href="{{ $link }}" class="min-w-0 flex-1">
                     <p class="text-sm text-ink {{ $notification->read_at ? '' : 'font-medium' }}">{{ $notification->data['message'] ?? '' }}</p>
                     <p class="mt-0.5 text-xs text-muted">{{ $notification->created_at->diffForHumans() }}</p>

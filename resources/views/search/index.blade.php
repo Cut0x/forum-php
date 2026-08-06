@@ -10,15 +10,15 @@
         @endif
     </div>
 
-    <div class="card divide-y divide-ink/10">
-        @if($query === '')
-            <p class="px-4 py-6 text-sm text-muted">Entrez une recherche pour afficher des résultats.</p>
-        @elseif($results->isEmpty())
-            <p class="px-4 py-6 text-sm text-muted">Aucun résultat.</p>
-        @else
+    @if($query === '')
+        <p class="card px-4 py-6 text-sm text-muted">Entrez une recherche pour afficher des résultats.</p>
+    @elseif($results->isEmpty())
+        <p class="card px-4 py-6 text-sm text-muted">Aucun résultat.</p>
+    @else
+        <div class="space-y-2">
             @foreach($results as $topic)
                 <x-forum.topic-row :topic="$topic" :show-category="true" />
             @endforeach
-        @endif
-    </div>
+        </div>
+    @endif
 </x-app-layout>

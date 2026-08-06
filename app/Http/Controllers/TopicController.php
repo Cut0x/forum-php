@@ -18,6 +18,9 @@ class TopicController extends Controller
     public function show(Topic $topic): View
     {
         $topic->load(['category', 'user.badges']);
+        $topic->loadSum('votes as score', 'value');
+        $topic->load(['votes' => fn ($q) => $q->where('user_id', auth()->id() ?? 0)]);
+        $topic->loadCount('posts');
 
         $posts = $topic->posts()
             ->withTrashed()

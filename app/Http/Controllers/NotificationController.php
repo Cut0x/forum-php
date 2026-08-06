@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Notifications\PostVoted;
 use App\Notifications\ReplyPosted;
+use App\Notifications\TopicVoted;
 use App\Notifications\UserMentioned;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -15,7 +17,7 @@ class NotificationController extends Controller
     protected const TYPES = [
         'reply' => ReplyPosted::class,
         'mention' => UserMentioned::class,
-        'vote' => PostVoted::class,
+        'vote' => [PostVoted::class, TopicVoted::class],
     ];
 
     public function index(Request $request): View
@@ -52,7 +54,7 @@ class NotificationController extends Controller
         $type = $request->query('type', 'all');
         $query = $request->user()->notifications();
         if (isset(self::TYPES[$type])) {
-            $query->where('type', self::TYPES[$type]);
+            $this->applyTypeFilter($query, self::TYPES[$type]);
         }
         $query->delete();
 
@@ -71,15 +73,20 @@ class NotificationController extends Controller
 
         $query = $user->notifications();
         if (isset(self::TYPES[$type])) {
-            $query->where('type', self::TYPES[$type]);
+            $this->applyTypeFilter($query, self::TYPES[$type]);
         }
 
         $notifications = $query->paginate(20)->withQueryString();
 
-        $counts = collect(self::TYPES)->mapWithKeys(fn ($class, $key) => [
-            $key => $user->unreadNotifications()->where('type', $class)->count(),
+        $counts = collect(self::TYPES)->mapWithKeys(fn ($classes, $key) => [
+            $key => $this->applyTypeFilter($user->unreadNotifications(), $classes)->count(),
         ]);
 
         return compact('notifications', 'type', 'counts');
+    }
+
+    protected function applyTypeFilter(MorphMany $query, string|array $classes): MorphMany
+    {
+        return is_array($classes) ? $query->whereIn('type', $classes) : $query->where('type', $classes);
     }
 }

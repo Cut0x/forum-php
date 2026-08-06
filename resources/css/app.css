@@ -55,6 +55,14 @@ body {
         @apply rounded-xl border border-ink/10 bg-surface;
     }
 
+    .card-hover {
+        @apply card transition hover:border-ink/20 hover:shadow-sm;
+    }
+
+    .vote-btn {
+        @apply inline-flex items-center justify-center rounded-md p-1 text-muted transition hover:bg-ink/10 hover:text-ink disabled:cursor-not-allowed disabled:opacity-50;
+    }
+
     .avatar {
         @apply rounded-full object-cover;
     }

@@ -16,6 +16,7 @@ use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\ThemeController;
 use App\Http\Controllers\TopicController;
+use App\Http\Controllers\TopicVoteController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', HomeController::class)->name('home');
@@ -35,6 +36,8 @@ Route::middleware('auth')->group(function () {
         ->middleware('not_suspended')->name('topics.store');
     Route::patch('/topics/{topic:slug}', [TopicController::class, 'update'])->name('topics.update');
     Route::delete('/topics/{topic:slug}', [TopicController::class, 'destroy'])->name('topics.destroy');
+    Route::post('/topics/{topic:slug}/vote', [TopicVoteController::class, 'store'])
+        ->middleware('not_suspended')->name('topics.vote');
 
     Route::post('/topics/{topic:slug}/posts', [PostController::class, 'store'])
         ->middleware('not_suspended')->name('posts.store');

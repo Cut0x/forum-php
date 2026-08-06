@@ -44,4 +44,9 @@ class TopicPolicy
     {
         return $user->isStaff();
     }
+
+    public function vote(User $user, Topic $topic): bool
+    {
+        return ! $user->isSuspended() && $topic->deleted_at === null;
+    }
 }

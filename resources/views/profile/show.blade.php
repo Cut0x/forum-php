@@ -3,7 +3,7 @@
 <x-app-layout :title="$user->displayName()">
     <section class="card mb-6 p-5">
         <div class="flex flex-col gap-4 sm:flex-row sm:items-center">
-            <img src="{{ $user->avatar ? asset('storage/'.$user->avatar) : asset('images/default-avatar.jpg') }}" class="avatar h-20 w-20" alt="">
+            <img src="{{ $user->avatar ? asset('storage/'.$user->avatar) : asset('images/default-avatar.jpg') }}" class="avatar h-20 w-20 ring-2 ring-ink/10" alt="">
             <div class="min-w-0 flex-1">
                 <div class="flex flex-wrap items-center gap-2">
                     <h1 class="text-lg font-semibold text-ink">{{ $user->displayName() }}</h1>
@@ -30,9 +30,9 @@
     </section>
 
     <div class="grid gap-4 sm:grid-cols-3">
-        <div class="card p-4"><p class="text-xs text-muted">Sujets</p><p class="text-xl font-semibold text-ink">{{ $stats['topics'] }}</p></div>
-        <div class="card p-4"><p class="text-xs text-muted">Messages</p><p class="text-xl font-semibold text-ink">{{ $stats['posts'] }}</p></div>
-        <div class="card p-4"><p class="text-xs text-muted">Badges</p><p class="text-xl font-semibold text-ink">{{ $stats['badges'] }}</p></div>
+        <div class="card-hover p-4"><p class="text-xs text-muted">Sujets</p><p class="text-xl font-semibold text-ink">{{ $stats['topics'] }}</p></div>
+        <div class="card-hover p-4"><p class="text-xs text-muted">Messages</p><p class="text-xl font-semibold text-ink">{{ $stats['posts'] }}</p></div>
+        <div class="card-hover p-4"><p class="text-xs text-muted">Badges</p><p class="text-xl font-semibold text-ink">{{ $stats['badges'] }}</p></div>
     </div>
 
     <div class="mt-4 grid gap-4 lg:grid-cols-2">

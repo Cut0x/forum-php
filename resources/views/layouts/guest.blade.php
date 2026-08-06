@@ -38,7 +38,7 @@
         {{ $settings['site_title'] }}
     </a>
 
-    <div class="card w-full max-w-sm p-6">
+    <div class="card w-full max-w-sm p-6 shadow-sm">
         {{ $slot }}
     </div>
 

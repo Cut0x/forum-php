@@ -1,45 +1,54 @@
 <x-app-layout>
-    <section class="card mb-6 flex flex-col items-start justify-between gap-4 p-5 sm:flex-row sm:items-center">
-        <div>
-            <h1 class="text-lg font-semibold text-ink">{{ $siteSettings['site_title'] }}</h1>
+    <x-slot:sidebar>
+        <div class="card p-4">
+            <h2 class="font-semibold text-ink">{{ $siteSettings['site_title'] }}</h2>
             <p class="mt-1 text-sm text-muted">{{ $siteSettings['site_description'] }}</p>
-        </div>
-        @auth
-            <x-forum.new-topic-modal :categories="$categories" />
-        @endauth
-    </section>
-
-    <div class="grid gap-6 lg:grid-cols-3">
-        <div class="card divide-y divide-ink/10 lg:col-span-2">
-            <div class="px-4 py-3">
-                <h2 class="text-sm font-semibold text-ink">Catégories</h2>
+            <div class="mt-3 grid grid-cols-3 gap-2 border-t border-ink/10 pt-3 text-center">
+                <div>
+                    <p class="text-sm font-semibold text-ink">{{ $stats['members'] }}</p>
+                    <p class="text-xs text-muted">Membres</p>
+                </div>
+                <div>
+                    <p class="text-sm font-semibold text-ink">{{ $stats['topics'] }}</p>
+                    <p class="text-xs text-muted">Sujets</p>
+                </div>
+                <div>
+                    <p class="text-sm font-semibold text-ink">{{ $stats['posts'] }}</p>
+                    <p class="text-xs text-muted">Messages</p>
+                </div>
             </div>
-            @forelse($categories as $category)
-                <a href="{{ route('categories.show', $category) }}" class="flex items-center justify-between gap-4 px-4 py-3 hover:bg-ink/5">
-                    <div class="min-w-0">
-                        <div class="flex items-center gap-1.5">
-                            @if($category->is_pinned)
-                                <x-icon name="pin" class="h-3.5 w-3.5 shrink-0 text-brand" />
-                            @endif
-                            <h3 class="truncate text-sm font-medium text-ink">{{ $category->name }}</h3>
-                        </div>
-                        <p class="mt-0.5 truncate text-xs text-muted">{{ $category->topics_count }} sujet{{ $category->topics_count > 1 ? 's' : '' }} · {{ $category->description }}</p>
-                    </div>
-                </a>
-            @empty
-                <p class="px-4 py-6 text-sm text-muted">Aucune catégorie pour le moment.</p>
-            @endforelse
+            @auth
+                <div class="mt-4">
+                    <x-forum.new-topic-modal :categories="$categories" />
+                </div>
+            @endauth
         </div>
 
-        <div class="card divide-y divide-ink/10">
-            <div class="px-4 py-3">
-                <h2 class="text-sm font-semibold text-ink">Derniers sujets</h2>
+        @if($categories->isNotEmpty())
+            <div class="card divide-y divide-ink/10">
+                <div class="px-4 py-3">
+                    <h2 class="text-sm font-semibold text-ink">Catégories</h2>
+                </div>
+                @foreach($categories->take(6) as $category)
+                    <a href="{{ route('categories.show', $category) }}" class="flex items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-ink/5">
+                        <span class="h-2.5 w-2.5 shrink-0 rounded-full" style="background: hsl({{ \App\Support\Color::hueForLabel($category->slug) }} 65% 45%)"></span>
+                        <span class="min-w-0 flex-1 truncate text-ink">{{ $category->name }}</span>
+                        <span class="shrink-0 text-xs text-muted">{{ $category->topics_count }}</span>
+                    </a>
+                @endforeach
             </div>
-            @forelse($latestTopics as $topic)
-                <x-forum.topic-row :topic="$topic" :show-category="true" />
-            @empty
-                <p class="px-4 py-6 text-sm text-muted">Aucun sujet pour le moment.</p>
-            @endforelse
-        </div>
+        @endif
+    </x-slot:sidebar>
+
+    <div class="mb-4 flex items-center justify-between">
+        <h1 class="text-lg font-semibold text-ink">Fil d'actualité</h1>
+    </div>
+
+    <div class="space-y-2">
+        @forelse($latestTopics as $topic)
+            <x-forum.topic-row :topic="$topic" :show-category="true" />
+        @empty
+            <p class="card px-4 py-6 text-sm text-muted">Aucun sujet pour le moment.</p>
+        @endforelse
     </div>
 </x-app-layout>

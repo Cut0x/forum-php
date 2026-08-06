@@ -60,6 +60,17 @@ class ForumTest extends TestCase
         $this->assertDatabaseHas('post_votes', ['post_id' => $post->id, 'user_id' => $voter->id, 'value' => 1]);
     }
 
+    public function test_member_can_vote_on_a_topic(): void
+    {
+        $author = User::factory()->create();
+        $voter = User::factory()->create();
+        $topic = Topic::factory()->for(Category::factory())->create(['user_id' => $author->id]);
+
+        $this->actingAs($voter)->post(route('topics.vote', $topic), ['value' => 1])->assertRedirect();
+
+        $this->assertDatabaseHas('topic_votes', ['topic_id' => $topic->id, 'user_id' => $voter->id, 'value' => 1]);
+    }
+
     public function test_member_can_report_a_topic(): void
     {
         $reporter = User::factory()->create();

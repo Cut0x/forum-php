@@ -40,9 +40,19 @@ class Topic extends Model
         return $this->hasMany(Post::class);
     }
 
+    public function votes(): HasMany
+    {
+        return $this->hasMany(TopicVote::class);
+    }
+
     public function reports(): MorphMany
     {
         return $this->morphMany(Report::class, 'reportable');
+    }
+
+    public function score(): int
+    {
+        return (int) $this->votes()->sum('value');
     }
 
     public function isLocked(): bool

@@ -9,7 +9,7 @@
     ];
 @endphp
 
-<x-app-layout :title="$title">
+<x-app-layout :title="$title" :with-sidebar="false">
     <div class="grid gap-6 lg:grid-cols-[200px_1fr]">
         <aside class="lg:sticky lg:top-20 lg:self-start">
             <nav class="card flex gap-1 overflow-x-auto p-2 lg:flex-col lg:overflow-visible">

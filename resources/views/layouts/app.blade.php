@@ -36,16 +36,20 @@
 </head>
 <body class="min-h-screen flex flex-col font-sans antialiased">
 
-<header class="border-b border-ink/10 bg-surface">
-    <div class="mx-auto flex max-w-6xl items-center gap-4 px-4 py-3 sm:px-6" x-data="{ mobileOpen: false }">
+<header class="sticky top-0 z-40 border-b border-ink/10 bg-surface">
+    <div class="mx-auto flex max-w-[1360px] items-center gap-4 px-4 py-3 sm:px-6" x-data="{ mobileOpen: false }">
         <a href="{{ route('home') }}" class="flex shrink-0 items-center gap-2 font-semibold text-ink">
             <x-icon name="chat" class="h-6 w-6 text-brand" />
             <span>{{ $siteSettings['site_title'] }}</span>
         </a>
 
         <nav class="hidden items-center gap-1 lg:flex">
-            <a href="{{ route('home') }}" class="rounded-lg px-3 py-2 text-sm font-medium text-ink/80 hover:bg-ink/5">Accueil</a>
-            <a href="{{ route('categories.index') }}" class="rounded-lg px-3 py-2 text-sm font-medium text-ink/80 hover:bg-ink/5">Catégories</a>
+            <a href="{{ route('home') }}" class="flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium {{ request()->routeIs('home') ? 'bg-brand/10 text-brand' : 'text-ink/80 hover:bg-ink/5' }}">
+                <x-icon name="home" class="h-4 w-4" /> Accueil
+            </a>
+            <a href="{{ route('categories.index') }}" class="flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium {{ request()->routeIs('categories.*') ? 'bg-brand/10 text-brand' : 'text-ink/80 hover:bg-ink/5' }}">
+                <x-icon name="grid" class="h-4 w-4" /> Catégories
+            </a>
         </nav>
 
         <form action="{{ route('search') }}" method="get" class="mx-auto hidden max-w-sm flex-1 lg:block">
@@ -117,47 +121,96 @@
             </button>
         </div>
 
-        <div x-show="mobileOpen" x-cloak x-transition class="absolute inset-x-0 top-full border-b border-ink/10 bg-surface p-4 lg:hidden">
+        <div x-show="mobileOpen" x-cloak x-transition class="absolute inset-x-0 top-full max-h-[calc(100vh-3.5rem)] overflow-y-auto border-b border-ink/10 bg-surface p-4 lg:hidden">
             <form action="{{ route('search') }}" method="get" class="mb-3">
                 <input type="search" name="q" value="{{ request('q') }}" placeholder="Rechercher…" class="field">
             </form>
             <nav class="flex flex-col gap-1">
-                <a href="{{ route('home') }}" class="rounded-lg px-3 py-2 text-sm font-medium hover:bg-ink/5">Accueil</a>
-                <a href="{{ route('categories.index') }}" class="rounded-lg px-3 py-2 text-sm font-medium hover:bg-ink/5">Catégories</a>
+                <a href="{{ route('home') }}" class="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium hover:bg-ink/5">
+                    <x-icon name="home" class="h-4 w-4" /> Accueil
+                </a>
+                <a href="{{ route('categories.index') }}" class="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium hover:bg-ink/5">
+                    <x-icon name="grid" class="h-4 w-4" /> Catégories
+                </a>
             </nav>
+            @if($sidebarCategories->isNotEmpty())
+                <nav class="mt-2 flex flex-col gap-1 border-t border-ink/10 pt-2">
+                    @foreach($sidebarCategories as $sidebarCategory)
+                        <a href="{{ route('categories.show', $sidebarCategory) }}" class="flex items-center gap-2.5 rounded-lg px-3 py-1.5 text-sm hover:bg-ink/5">
+                            <span class="h-2.5 w-2.5 shrink-0 rounded-full" style="background: hsl({{ \App\Support\Color::hueForLabel($sidebarCategory->slug) }} 65% 45%)"></span>
+                            <span class="truncate">{{ $sidebarCategory->name }}</span>
+                        </a>
+                    @endforeach
+                </nav>
+            @endif
         </div>
     </div>
 </header>
 
-<main class="mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:px-6">
-    @if(session('success'))
-        <div class="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-200">
-            {{ session('success') }}
-        </div>
-    @endif
-    @if(session('error'))
-        <div class="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950 dark:text-red-200">
-            {{ session('error') }}
-        </div>
-    @endif
-    @if($errors->any())
-        <div class="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950 dark:text-red-200">
-            <p class="font-medium">Le formulaire contient des erreurs :</p>
-            <ul class="mt-1 list-disc space-y-0.5 pl-4">
-                @foreach($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
+<main class="mx-auto flex w-full max-w-[1360px] flex-1 items-start gap-6 px-4 py-6 sm:px-6">
+    @if($withSidebar)
+        <aside class="hidden w-60 shrink-0 lg:block">
+            <nav class="card sticky top-20 flex flex-col gap-0.5 p-2">
+                <a href="{{ route('home') }}" class="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium {{ request()->routeIs('home') ? 'bg-brand text-white' : 'text-ink hover:bg-ink/5' }}">
+                    <x-icon name="home" class="h-4 w-4" /> Accueil
+                </a>
+                <a href="{{ route('categories.index') }}" class="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium {{ request()->routeIs('categories.index') ? 'bg-brand text-white' : 'text-ink hover:bg-ink/5' }}">
+                    <x-icon name="grid" class="h-4 w-4" /> Catégories
+                </a>
+            </nav>
+
+            @if($sidebarCategories->isNotEmpty())
+                <nav class="card sticky top-[8.5rem] mt-4 max-h-[60vh] overflow-y-auto p-2">
+                    <p class="px-3 pb-1.5 pt-1 text-xs font-semibold uppercase tracking-wide text-muted">Catégories</p>
+                    @php $currentCategorySlug = optional(request()->route('category'))->slug; @endphp
+                    @foreach($sidebarCategories as $sidebarCategory)
+                        <a href="{{ route('categories.show', $sidebarCategory) }}" class="flex items-center gap-2.5 rounded-lg px-3 py-1.5 text-sm {{ $currentCategorySlug === $sidebarCategory->slug ? 'bg-brand text-white' : 'text-ink hover:bg-ink/5' }}">
+                            <span class="h-2.5 w-2.5 shrink-0 rounded-full" style="background: hsl({{ \App\Support\Color::hueForLabel($sidebarCategory->slug) }} 65% 45%)"></span>
+                            <span class="truncate">{{ $sidebarCategory->name }}</span>
+                        </a>
+                    @endforeach
+                </nav>
+            @endif
+        </aside>
     @endif
 
-    @isset($header){{ $header }}@endisset
+    <div class="min-w-0 flex-1">
+        @if(session('success'))
+            <div class="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-200">
+                {{ session('success') }}
+            </div>
+        @endif
+        @if(session('error'))
+            <div class="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950 dark:text-red-200">
+                {{ session('error') }}
+            </div>
+        @endif
+        @if($errors->any())
+            <div class="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950 dark:text-red-200">
+                <p class="font-medium">Le formulaire contient des erreurs :</p>
+                <ul class="mt-1 list-disc space-y-0.5 pl-4">
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
 
-    {{ $slot }}
+        @isset($header){{ $header }}@endisset
+
+        @isset($sidebar)
+            <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
+                <div class="min-w-0">{{ $slot }}</div>
+                <aside class="space-y-4 lg:sticky lg:top-20 lg:self-start">{{ $sidebar }}</aside>
+            </div>
+        @else
+            {{ $slot }}
+        @endisset
+    </div>
 </main>
 
 <footer class="border-t border-ink/10 bg-surface">
-    <div class="mx-auto max-w-6xl px-4 py-10 sm:px-6">
+    <div class="mx-auto max-w-[1360px] px-4 py-10 sm:px-6">
         <div class="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
             <div>
                 <div class="mb-2 font-semibold text-ink">{{ $siteSettings['footer_text'] }}</div>

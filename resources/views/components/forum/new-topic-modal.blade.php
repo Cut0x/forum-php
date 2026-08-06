@@ -16,7 +16,7 @@
     </button>
 
     <div x-show="open" x-cloak class="fixed inset-0 z-30 flex items-center justify-center bg-ink/40 p-4" x-transition.opacity>
-        <div @click.outside="open = false" x-transition class="card w-full max-w-lg p-5">
+        <div @click.outside="open = false" x-transition class="card w-full max-w-lg p-5 shadow-xl">
             <div class="mb-4 flex items-center justify-between">
                 <h2 class="text-base font-semibold text-ink">{{ $label }}</h2>
                 <button type="button" @click="open = false" class="btn-ghost !p-1.5"><x-icon name="x" class="h-4 w-4" /></button>
