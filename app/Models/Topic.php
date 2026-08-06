@@ -50,7 +50,13 @@ class Topic extends Model
         return $this->morphMany(Report::class, 'reportable');
     }
 
-    public function score(): int
+    /**
+     * Calcule le score au vol (requête à part). Ne pas nommer cette méthode "score" :
+     * Eloquent interprète toute méthode publique sans argument accédée comme propriété
+     * ($topic->score) comme une tentative de relation, et plante si `score` n'a pas été
+     * pré-chargé en attribut via withSum/loadSum('votes as score', 'value').
+     */
+    public function totalScore(): int
     {
         return (int) $this->votes()->sum('value');
     }

@@ -34,7 +34,9 @@
     <div class="card divide-y divide-ink/10">
         @forelse($notifications as $notification)
             @php
-                $link = isset($notification->data['topic_slug']) ? route('topics.show', $notification->data['topic_slug']) : '#';
+                $link = isset($notification->data['topic_slug'], $notification->data['category_slug'])
+                    ? route('topics.show', [$notification->data['category_slug'], $notification->data['topic_slug']])
+                    : '#';
             @endphp
             <div class="flex items-start justify-between gap-3 px-4 py-3 {{ $notification->read_at ? '' : 'bg-brand/5' }} hover:bg-ink/5">
                 <a href="{{ $link }}" class="min-w-0 flex-1">

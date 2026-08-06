@@ -25,7 +25,7 @@ class UserMentioned extends Notification
             ->subject('Vous avez été mentionné')
             ->greeting('Bonjour '.$notifiable->displayName().',')
             ->line($this->actor->displayName().' vous a mentionné dans « '.$this->post->topic->title.' ».')
-            ->action('Voir le message', route('topics.show', $this->post->topic).'#post-'.$this->post->id);
+            ->action('Voir le message', route('topics.show', [$this->post->topic->category, $this->post->topic]).'#post-'.$this->post->id);
     }
 
     public function toArray(object $notifiable): array
@@ -34,6 +34,7 @@ class UserMentioned extends Notification
             'message' => $this->actor->displayName().' vous a mentionné.',
             'topic_id' => $this->post->topic_id,
             'topic_slug' => $this->post->topic->slug,
+            'category_slug' => $this->post->topic->category->slug,
             'post_id' => $this->post->id,
             'actor_id' => $this->actor->id,
             'actor_username' => $this->actor->username,

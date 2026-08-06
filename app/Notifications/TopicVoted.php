@@ -26,6 +26,7 @@ class TopicVoted extends Notification
             'message' => $this->actor->displayName().' a laissé un vote '.$label.' sur votre sujet.',
             'topic_id' => $this->topic->id,
             'topic_slug' => $this->topic->slug,
+            'category_slug' => $this->topic->category->slug,
             'actor_id' => $this->actor->id,
             'actor_username' => $this->actor->username,
             'actor_name' => $this->actor->displayName(),

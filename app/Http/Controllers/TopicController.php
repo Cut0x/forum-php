@@ -16,8 +16,14 @@ use Illuminate\View\View;
 
 class TopicController extends Controller
 {
-    public function show(Topic $topic): View
+    public function show(Category $category, Topic $topic): RedirectResponse|View
     {
+        // Le sujet a été déplacé depuis (modération) : on ne casse pas le lien, on redirige
+        // vers son URL canonique plutôt que de renvoyer une 404.
+        if ($topic->category_id !== $category->id) {
+            return redirect()->route('topics.show', [$topic->category, $topic], 301);
+        }
+
         $topic->load(['category', 'user.badges']);
         $topic->loadSum('votes as score', 'value');
         $topic->load(['votes' => fn ($q) => $q->where('user_id', auth()->id() ?? 0)]);
@@ -54,7 +60,7 @@ class TopicController extends Controller
         app(BadgeAwarder::class)->awardFor($request->user());
         app(MentionNotifier::class)->notify($post, $request->user());
 
-        return redirect()->route('topics.show', $topic)->with('success', 'Sujet publié.');
+        return redirect()->route('topics.show', [$category, $topic])->with('success', 'Sujet publié.');
     }
 
     public function update(UpdateTopicRequest $request, Topic $topic): RedirectResponse|JsonResponse

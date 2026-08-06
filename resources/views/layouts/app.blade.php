@@ -7,6 +7,7 @@
 
     <title>{{ isset($title) ? $title.' - '.$siteSettings['site_title'] : $siteSettings['site_title'] }}</title>
     <meta name="description" content="{{ $siteSettings['site_description'] }}">
+    <link rel="icon" href="{{ ($siteSettings['site_favicon'] ?? null) ? asset('storage/'.$siteSettings['site_favicon']) : asset('favicon.ico') }}">
 
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700&display=swap" rel="stylesheet" />
@@ -39,8 +40,12 @@
 <header class="sticky top-0 z-40 border-b border-ink/10 bg-surface">
     <div class="mx-auto flex max-w-[1360px] items-center gap-4 px-4 py-3 sm:px-6" x-data="{ mobileOpen: false }">
         <a href="{{ route('home') }}" class="flex shrink-0 items-center gap-2 font-semibold text-ink">
-            <x-icon name="chat" class="h-6 w-6 text-brand" />
-            <span>{{ $siteSettings['site_title'] }}</span>
+            @if($siteSettings['site_logo'] ?? null)
+                <img src="{{ asset('storage/'.$siteSettings['site_logo']) }}" alt="{{ $siteSettings['site_title'] }}" class="h-7 w-auto">
+            @else
+                <x-icon name="chat" class="h-6 w-6 text-brand" />
+                <span>{{ $siteSettings['site_title'] }}</span>
+            @endif
         </a>
 
         <nav class="hidden items-center gap-1 lg:flex">
@@ -213,7 +218,11 @@
     <div class="mx-auto max-w-[1360px] px-4 py-10 sm:px-6">
         <div class="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
             <div>
-                <div class="mb-2 font-semibold text-ink">{{ $siteSettings['footer_text'] }}</div>
+                @if($siteSettings['site_footer_logo'] ?? null)
+                    <img src="{{ asset('storage/'.$siteSettings['site_footer_logo']) }}" alt="{{ $siteSettings['footer_text'] }}" class="mb-2 h-8 w-auto">
+                @else
+                    <div class="mb-2 font-semibold text-ink">{{ $siteSettings['footer_text'] }}</div>
+                @endif
                 <p class="text-sm text-muted">Communauté, discussions et ressources.</p>
             </div>
             @foreach($footerCategories as $footerCategory)

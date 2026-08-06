@@ -20,6 +20,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::patch('/theme', [ThemeController::class, 'update'])->name('theme.update');
     Route::post('/theme/preset', [ThemeController::class, 'preset'])->name('theme.preset');
     Route::post('/theme/reset', [ThemeController::class, 'reset'])->name('theme.reset');
+    Route::patch('/theme/identity', [ThemeController::class, 'updateIdentity'])->name('theme.identity');
 
     Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
     Route::post('/categories', [CategoryController::class, 'store'])->name('categories.store');

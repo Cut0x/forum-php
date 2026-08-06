@@ -26,6 +26,7 @@ class PostVoted extends Notification
             'message' => $this->actor->displayName().' a laissé un vote '.$label.' sur votre message.',
             'topic_id' => $this->post->topic_id,
             'topic_slug' => $this->post->topic->slug,
+            'category_slug' => $this->post->topic->category->slug,
             'post_id' => $this->post->id,
             'actor_id' => $this->actor->id,
             'actor_username' => $this->actor->username,

@@ -26,7 +26,7 @@ class UserController extends Controller
         ]);
 
         $user->update(['role' => $data['role']]);
-        $awarder->awardForRole($user, $data['role']);
+        $awarder->awardFor($user);
 
         return $this->respond($request, $user, 'Rôle mis à jour.');
     }

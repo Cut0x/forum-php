@@ -9,8 +9,8 @@
     $userVote = $post->votes->first()?->value;
 @endphp
 
-<article id="post-{{ $post->id }}" class="card scroll-mt-20 p-4 sm:p-5">
-    <div class="flex gap-3">
+<article id="post-{{ $post->id }}" class="scroll-mt-20 -mx-2 rounded-lg px-2 py-2 transition hover:bg-ink/[0.03]">
+    <div class="flex gap-2">
         @if(!$deleted)
             <x-forum.vote
                 size="sm"
@@ -21,7 +21,7 @@
             />
         @endif
 
-        <img src="{{ $post->user->avatar ? asset('storage/'.$post->user->avatar) : asset('images/default-avatar.jpg') }}" alt="" class="avatar h-9 w-9 shrink-0">
+        <img src="{{ $post->user->avatar ? asset('storage/'.$post->user->avatar) : asset('images/default-avatar.jpg') }}" alt="" class="avatar h-6 w-6 shrink-0">
 
         <div class="min-w-0 flex-1">
             <div class="flex flex-wrap items-center gap-x-2 gap-y-1">

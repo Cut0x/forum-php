@@ -31,7 +31,7 @@ class PostController extends Controller
         }
 
         if ($request->ajax()) {
-            $post->load('user.badges', 'votes');
+            $post->load('user.badges', 'votes')->loadSum('votes as score', 'value');
 
             return $this->fragment(view('components.forum.post-thread', [
                 'post' => $post,
@@ -40,7 +40,7 @@ class PostController extends Controller
             ]), 'Réponse publiée.');
         }
 
-        return redirect()->route('topics.show', $topic)->with('success', 'Réponse publiée.')->withFragment('post-'.$post->id);
+        return redirect()->route('topics.show', [$topic->category, $topic])->with('success', 'Réponse publiée.')->withFragment('post-'.$post->id);
     }
 
     public function update(UpdatePostRequest $request, Post $post): RedirectResponse|Response
@@ -51,7 +51,7 @@ class PostController extends Controller
         ]);
 
         if ($request->ajax()) {
-            $post->load('user.badges', 'votes');
+            $post->load('user.badges', 'votes')->loadSum('votes as score', 'value');
 
             return $this->fragment(view('components.forum.post', [
                 'post' => $post,
@@ -70,7 +70,7 @@ class PostController extends Controller
         $post->delete();
 
         if ($request->ajax()) {
-            $post->load('user.badges');
+            $post->load('user.badges')->loadSum('votes as score', 'value');
 
             return $this->fragment(view('components.forum.post', [
                 'post' => $post,

@@ -14,7 +14,7 @@
         :action="route('topics.vote', $topic)"
     />
 
-    <a href="{{ route('topics.show', $topic) }}" class="min-w-0 flex-1">
+    <a href="{{ route('topics.show', [$topic->category, $topic]) }}" class="min-w-0 flex-1">
         <div class="flex flex-wrap items-center gap-1.5">
             @if($showCategory)
                 <span class="inline-flex items-center gap-1.5 rounded-full bg-ink/5 px-2 py-0.5 text-xs font-medium text-muted">

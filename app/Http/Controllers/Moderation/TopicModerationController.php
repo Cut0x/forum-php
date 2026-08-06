@@ -82,6 +82,6 @@ class TopicModerationController extends Controller
             return response()->json(['category' => $destination->name]);
         }
 
-        return redirect()->route('topics.show', $topic)->with('success', 'Sujet déplacé vers « '.$destination->name.' ».');
+        return redirect()->route('topics.show', [$destination, $topic])->with('success', 'Sujet déplacé vers « '.$destination->name.' ».');
     }
 }

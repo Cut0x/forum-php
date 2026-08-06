@@ -21,7 +21,7 @@
                 @csrf
                 @if($has) @method('delete') @endif
                 <button type="submit" class="flex items-center gap-1 rounded-full border px-2 py-1 text-xs {{ $has ? 'border-brand bg-brand/10 text-brand' : 'border-ink/15 text-muted hover:text-ink' }}">
-                    <img src="{{ asset('images/badges/'.$badge->icon) }}" class="h-4 w-4" alt="">
+                    <img src="{{ $badge->iconUrl }}" class="h-4 w-4" alt="">
                     {{ $badge->name }}
                 </button>
             </form>

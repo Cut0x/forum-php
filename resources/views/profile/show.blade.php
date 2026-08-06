@@ -18,7 +18,7 @@
                 @if($user->badges->isNotEmpty())
                     <div class="mt-3 flex flex-wrap gap-2">
                         @foreach($user->badges as $badge)
-                            <img src="{{ asset('images/badges/'.$badge->icon) }}" title="{{ $badge->name }}" alt="{{ $badge->name }}" class="h-6 w-6">
+                            <img src="{{ $badge->iconUrl }}" title="{{ $badge->name }}" alt="{{ $badge->name }}" class="h-6 w-6">
                         @endforeach
                     </div>
                 @endif
@@ -39,7 +39,7 @@
         <div class="card divide-y divide-ink/10">
             <div class="px-4 py-3"><h2 class="text-sm font-semibold text-ink">Sujets récents</h2></div>
             @forelse($recentTopics as $topic)
-                <a href="{{ route('topics.show', $topic) }}" class="flex items-center justify-between px-4 py-3 text-sm hover:bg-ink/5">
+                <a href="{{ route('topics.show', [$topic->category, $topic]) }}" class="flex items-center justify-between px-4 py-3 text-sm hover:bg-ink/5">
                     <span class="truncate">{{ $topic->title }}</span>
                     <time class="shrink-0 text-xs text-muted">{{ $topic->created_at->diffForHumans() }}</time>
                 </a>
@@ -50,7 +50,7 @@
         <div class="card divide-y divide-ink/10">
             <div class="px-4 py-3"><h2 class="text-sm font-semibold text-ink">Derniers messages</h2></div>
             @forelse($recentPosts as $post)
-                <a href="{{ route('topics.show', $post->topic) }}" class="flex items-center justify-between px-4 py-3 text-sm hover:bg-ink/5">
+                <a href="{{ route('topics.show', [$post->topic->category, $post->topic]) }}" class="flex items-center justify-between px-4 py-3 text-sm hover:bg-ink/5">
                     <span class="truncate">{{ $post->topic->title }}</span>
                     <time class="shrink-0 text-xs text-muted">{{ $post->created_at->diffForHumans() }}</time>
                 </a>

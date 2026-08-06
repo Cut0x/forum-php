@@ -30,6 +30,10 @@ class CategoryController extends Controller
             ->latest()
             ->paginate(20);
 
+        // Tous ces sujets appartiennent à $category : on évite un N+1 sur topic-row (qui a besoin
+        // de $topic->category pour son URL) en réutilisant simplement le modèle déjà en main.
+        $topics->getCollection()->each->setRelation('category', $category);
+
         $categories = Category::query()->orderBy('sort_order')->orderBy('name')->get(['id', 'name', 'slug', 'is_readonly']);
 
         return view('categories.show', compact('category', 'topics', 'categories'));

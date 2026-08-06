@@ -20,6 +20,42 @@
 @endphp
 
 <div id="theme-panel" class="space-y-6">
+    @php
+        $assets = [
+            'logo' => ['key' => 'site_logo', 'label' => 'Logo (barre de navigation)', 'help' => 'Affiché à la place de l\'icône par défaut dans l\'en-tête.'],
+            'favicon' => ['key' => 'site_favicon', 'label' => 'Favicon (onglet du navigateur)', 'help' => 'PNG carré recommandé.'],
+            'footer_logo' => ['key' => 'site_footer_logo', 'label' => 'Logo (pied de page)', 'help' => 'Affiché au-dessus du texte du footer.'],
+        ];
+    @endphp
+
+    <form method="post" action="{{ route('admin.theme.identity') }}" class="card space-y-4 p-5" enctype="multipart/form-data" data-remote="replace" data-target="#theme-panel">
+        @csrf @method('patch')
+        <h2 class="text-sm font-semibold text-ink">Identité visuelle</h2>
+        <div class="grid gap-4 sm:grid-cols-3">
+            @foreach($assets as $field => $meta)
+                <div class="space-y-2">
+                    <label class="block text-xs font-medium text-ink">{{ $meta['label'] }}</label>
+                    <div class="flex h-16 items-center justify-center rounded-lg border border-dashed border-ink/15 bg-ink/5 p-2">
+                        @if($identity[$meta['key']] ?? null)
+                            <img src="{{ asset('storage/'.$identity[$meta['key']]) }}" alt="" class="max-h-full max-w-full object-contain">
+                        @else
+                            <span class="text-xs text-muted">Aucun</span>
+                        @endif
+                    </div>
+                    <input type="file" name="{{ $field }}" accept="image/png,image/jpeg,image/gif,image/webp" class="field text-xs">
+                    @if($identity[$meta['key']] ?? null)
+                        <label class="flex items-center gap-1.5 text-xs text-muted">
+                            <input type="checkbox" name="remove_{{ $field }}" value="1" class="rounded border-ink/15">
+                            Retirer
+                        </label>
+                    @endif
+                    <p class="text-[11px] text-muted">{{ $meta['help'] }}</p>
+                </div>
+            @endforeach
+        </div>
+        <button type="submit" class="btn-primary">Enregistrer l'identité visuelle</button>
+    </form>
+
     <div class="card flex flex-wrap items-center gap-2 p-4">
         @foreach($presets as $key => $preset)
             <form method="post" action="{{ route('admin.theme.preset') }}" data-remote="replace" data-target="#theme-panel">
