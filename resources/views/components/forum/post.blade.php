@@ -1,4 +1,4 @@
-@props(['post'])
+@props(['post', 'topic', 'canReply' => false])
 
 @php
     $deleted = $post->trashed();
@@ -61,25 +61,48 @@
             @endif
 
             @if(!$deleted)
-                <div class="mt-3 flex items-center gap-3">
-                    <div class="ml-auto flex items-center gap-3 text-xs">
-                        @if($canEdit)
-                            <button type="button" x-data @click="$dispatch('edit-post-{{ $post->id }}')" class="text-muted hover:text-ink">Modifier</button>
+                <div class="mt-3" x-data="{ replying: false }">
+                    <div class="flex items-center gap-3">
+                        @if($canReply)
+                            <button type="button" @click="replying = !replying" class="text-xs text-muted hover:text-ink" x-text="replying ? 'Annuler' : 'Répondre'"></button>
                         @endif
-                        @if($canDelete)
-                            <form method="post" action="{{ route('posts.destroy', $post) }}" data-remote="remove" data-target="closest:article">
-                                @csrf
-                                @method('delete')
-                                <x-confirm-submit
-                                    title="Supprimer ce message ?"
-                                    message="Cette action est irréversible."
-                                />
-                            </form>
-                        @endif
-                        @if($canReport)
-                            <x-forum.report-button :reportable="$post" route="posts.reports.store" />
-                        @endif
+                        <div class="ml-auto flex items-center gap-3 text-xs">
+                            @if($canEdit)
+                                <button type="button" x-data @click="$dispatch('edit-post-{{ $post->id }}')" class="text-muted hover:text-ink">Modifier</button>
+                            @endif
+                            @if($canDelete)
+                                <form method="post" action="{{ route('posts.destroy', $post) }}" data-remote="replace" data-target="closest:article">
+                                    @csrf
+                                    @method('delete')
+                                    <x-confirm-submit
+                                        title="Supprimer ce message ?"
+                                        message="Cette action est irréversible."
+                                    />
+                                </form>
+                            @endif
+                            @if($canReport)
+                                <x-forum.report-button :reportable="$post" route="posts.reports.store" />
+                            @endif
+                        </div>
                     </div>
+
+                    @if($canReply)
+                        <div x-show="replying" x-cloak class="mt-2">
+                            <form
+                                method="post"
+                                action="{{ route('posts.store', $topic) }}"
+                                data-remote="append"
+                                data-target="#replies-{{ $post->id }}"
+                                data-reset-on-success
+                                @submit="replying = false"
+                            >
+                                @csrf
+                                <input type="hidden" name="parent_id" value="{{ $post->id }}">
+                                <x-editor name="content" :id="'reply-content-'.$post->id" :value="'@'.$post->user->username.' '" rows="3" />
+                                <button type="submit" class="btn-primary mt-2 !py-1.5 text-xs">Répondre</button>
+                            </form>
+                        </div>
+                    @endif
                 </div>
             @endif
         </div>

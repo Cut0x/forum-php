@@ -6,7 +6,9 @@ use App\Models\Category;
 use App\Models\Post;
 use App\Models\Topic;
 use App\Models\User;
+use App\Notifications\UserMentioned;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
 class ForumTest extends TestCase
@@ -58,6 +60,39 @@ class ForumTest extends TestCase
         $this->actingAs($voter)->post(route('posts.vote', $post), ['value' => 1])->assertRedirect();
 
         $this->assertDatabaseHas('post_votes', ['post_id' => $post->id, 'user_id' => $voter->id, 'value' => 1]);
+    }
+
+    public function test_member_can_reply_to_a_specific_post_and_the_parent_author_is_mentioned(): void
+    {
+        Notification::fake();
+
+        $parentAuthor = User::factory()->create(['username' => 'helene_blanchard']);
+        $replier = User::factory()->create();
+        $topic = Topic::factory()->for(Category::factory())->create();
+        $parentPost = Post::factory()->for($topic)->create(['user_id' => $parentAuthor->id]);
+
+        $this->actingAs($replier)->post(route('posts.store', $topic), [
+            'parent_id' => $parentPost->id,
+            'content' => '@helene_blanchard Merci pour ta réponse !',
+        ])->assertRedirect();
+
+        $reply = Post::query()->where('parent_id', $parentPost->id)->first();
+        $this->assertNotNull($reply);
+        $this->assertSame($replier->id, $reply->user_id);
+
+        Notification::assertSentTo($parentAuthor, UserMentioned::class);
+    }
+
+    public function test_reply_cannot_be_attached_to_a_post_from_another_topic(): void
+    {
+        $user = User::factory()->create();
+        $topic = Topic::factory()->for(Category::factory())->create();
+        $otherTopicPost = Post::factory()->for(Topic::factory()->for(Category::factory()))->create();
+
+        $this->actingAs($user)->post(route('posts.store', $topic), [
+            'parent_id' => $otherTopicPost->id,
+            'content' => 'Réponse invalide.',
+        ])->assertSessionHasErrors('parent_id');
     }
 
     public function test_member_can_vote_on_a_topic(): void

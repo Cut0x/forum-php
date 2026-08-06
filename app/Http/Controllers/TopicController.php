@@ -8,6 +8,7 @@ use App\Models\Category;
 use App\Models\Topic;
 use App\Services\BadgeAwarder;
 use App\Services\MentionNotifier;
+use App\Services\PostThreadBuilder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -22,12 +23,14 @@ class TopicController extends Controller
         $topic->load(['votes' => fn ($q) => $q->where('user_id', auth()->id() ?? 0)]);
         $topic->loadCount('posts');
 
-        $posts = $topic->posts()
+        $flatPosts = $topic->posts()
             ->withTrashed()
-            ->with(['user.badges', 'votes' => fn ($q) => $q->where('user_id', auth()->id())])
+            ->with(['user.badges', 'votes' => fn ($q) => $q->where('user_id', auth()->id() ?? 0)])
             ->withSum('votes as score', 'value')
             ->orderBy('created_at')
-            ->paginate(30);
+            ->get();
+
+        $posts = app(PostThreadBuilder::class)->build($flatPosts);
 
         return view('topics.show', compact('topic', 'posts'));
     }

@@ -19,6 +19,7 @@ class PostController extends Controller
     {
         $post = $topic->posts()->create([
             'user_id' => $request->user()->id,
+            'parent_id' => $request->validated('parent_id'),
             'content' => $request->validated('content'),
         ]);
 
@@ -30,9 +31,13 @@ class PostController extends Controller
         }
 
         if ($request->ajax()) {
-            $post->load('user.badges');
+            $post->load('user.badges', 'votes');
 
-            return $this->fragment(view('components.forum.post', ['post' => $post]), 'Réponse publiée.');
+            return $this->fragment(view('components.forum.post-thread', [
+                'post' => $post,
+                'topic' => $topic,
+                'canReply' => true,
+            ]), 'Réponse publiée.');
         }
 
         return redirect()->route('topics.show', $topic)->with('success', 'Réponse publiée.')->withFragment('post-'.$post->id);
@@ -48,7 +53,11 @@ class PostController extends Controller
         if ($request->ajax()) {
             $post->load('user.badges', 'votes');
 
-            return $this->fragment(view('components.forum.post', ['post' => $post]), 'Message mis à jour.');
+            return $this->fragment(view('components.forum.post', [
+                'post' => $post,
+                'topic' => $post->topic,
+                'canReply' => $request->user()->can('reply', $post->topic),
+            ]), 'Message mis à jour.');
         }
 
         return back()->with('success', 'Message mis à jour.');
@@ -61,7 +70,13 @@ class PostController extends Controller
         $post->delete();
 
         if ($request->ajax()) {
-            return $this->ajaxOk('Message supprimé.');
+            $post->load('user.badges');
+
+            return $this->fragment(view('components.forum.post', [
+                'post' => $post,
+                'topic' => $post->topic,
+                'canReply' => false,
+            ]), 'Message supprimé.');
         }
 
         return back()->with('success', 'Message supprimé.');

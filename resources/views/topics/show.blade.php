@@ -28,7 +28,7 @@
                 </div>
                 <div class="flex items-center justify-between gap-2">
                     <dt>Réponses</dt>
-                    <dd class="text-ink">{{ $topic->posts_count ?? $posts->total() }}</dd>
+                    <dd class="text-ink">{{ $topic->posts_count }}</dd>
                 </div>
                 <div class="flex items-center justify-between gap-2">
                     <dt>Créé</dt>
@@ -166,13 +166,13 @@
         </div>
     </div>
 
-    <div id="posts-list" class="space-y-4">
-        @foreach($posts as $post)
-            <x-forum.post :post="$post" />
-        @endforeach
+    <div id="posts-list" class="space-y-3">
+        @forelse($posts as $post)
+            <x-forum.post-thread :post="$post" :topic="$topic" :can-reply="$canReply" />
+        @empty
+            <p class="card px-4 py-6 text-center text-sm text-muted">Aucune réponse pour le moment. Soyez le premier à répondre !</p>
+        @endforelse
     </div>
-
-    <div class="mt-4">{{ $posts->links() }}</div>
 
     <div class="card mt-6 p-4 sm:p-5">
         @if($topic->locked_at)

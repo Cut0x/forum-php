@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-#[Fillable(['topic_id', 'user_id', 'content', 'edited_at'])]
+#[Fillable(['topic_id', 'user_id', 'parent_id', 'content', 'edited_at'])]
 class Post extends Model
 {
     use HasFactory, SoftDeletes;
@@ -32,6 +32,16 @@ class Post extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function parent(): BelongsTo
+    {
+        return $this->belongsTo(Post::class, 'parent_id');
+    }
+
+    public function replies(): HasMany
+    {
+        return $this->hasMany(Post::class, 'parent_id');
     }
 
     public function votes(): HasMany
