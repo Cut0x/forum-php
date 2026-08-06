@@ -7,7 +7,7 @@
 
     <title>{{ isset($title) ? $title.' - '.$siteSettings['site_title'] : $siteSettings['site_title'] }}</title>
     <meta name="description" content="{{ $siteSettings['site_description'] }}">
-    <link rel="icon" href="{{ ($siteSettings['site_favicon'] ?? null) ? asset('storage/'.$siteSettings['site_favicon']) : asset('favicon.ico') }}">
+    <link rel="icon" href="{{ ($siteSettings['site_favicon'] ?? null) ?: asset('favicon.ico') }}">
 
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700&display=swap" rel="stylesheet" />
@@ -41,7 +41,7 @@
     <div class="mx-auto flex max-w-[1360px] items-center gap-4 px-4 py-3 sm:px-6" x-data="{ mobileOpen: false }">
         <a href="{{ route('home') }}" class="flex shrink-0 items-center gap-2 font-semibold text-ink">
             @if($siteSettings['site_logo'] ?? null)
-                <img src="{{ asset('storage/'.$siteSettings['site_logo']) }}" alt="{{ $siteSettings['site_title'] }}" class="h-7 w-auto">
+                <img src="{{ $siteSettings['site_logo'] }}" alt="{{ $siteSettings['site_title'] }}" class="h-7 w-auto">
             @else
                 <x-icon name="chat" class="h-6 w-6 text-brand" />
                 <span>{{ $siteSettings['site_title'] }}</span>
@@ -219,7 +219,7 @@
         <div class="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
             <div>
                 @if($siteSettings['site_footer_logo'] ?? null)
-                    <img src="{{ asset('storage/'.$siteSettings['site_footer_logo']) }}" alt="{{ $siteSettings['footer_text'] }}" class="mb-2 h-8 w-auto">
+                    <img src="{{ $siteSettings['site_footer_logo'] }}" alt="{{ $siteSettings['footer_text'] }}" class="mb-2 h-8 w-auto">
                 @else
                     <div class="mb-2 font-semibold text-ink">{{ $siteSettings['footer_text'] }}</div>
                 @endif

@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Services\SiteAssetUploader;
 use App\Support\Settings;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -18,12 +17,8 @@ class ThemeController extends Controller
         'theme_font',
     ];
 
-    /** Clé de réglage => [dossier de stockage, dimension max en pixels]. */
-    protected const IDENTITY_ASSETS = [
-        'site_logo' => ['branding/logo', 512],
-        'site_favicon' => ['branding/favicon', 256],
-        'site_footer_logo' => ['branding/footer-logo', 512],
-    ];
+    /** Réglages d'identité visuelle : chacun est un lien direct vers une image (PNG recommandé). */
+    protected const IDENTITY_KEYS = ['site_logo', 'site_favicon', 'site_footer_logo'];
 
     public function edit(): View
     {
@@ -57,32 +52,19 @@ class ThemeController extends Controller
         return back()->with('success', 'Thème mis à jour.');
     }
 
-    public function updateIdentity(Request $request, SiteAssetUploader $uploader): RedirectResponse|Response
+    public function updateIdentity(Request $request): RedirectResponse|Response
     {
-        $request->validate([
-            'logo' => ['nullable', 'image', 'mimes:png,jpg,jpeg,gif,webp', 'max:2048'],
-            'favicon' => ['nullable', 'image', 'mimes:png,jpg,jpeg,gif,webp', 'max:2048'],
-            'footer_logo' => ['nullable', 'image', 'mimes:png,jpg,jpeg,gif,webp', 'max:2048'],
+        $data = $request->validate([
+            'site_logo' => ['nullable', 'url', 'max:2048'],
+            'site_favicon' => ['nullable', 'url', 'max:2048'],
+            'site_footer_logo' => ['nullable', 'url', 'max:2048'],
         ]);
 
-        $updates = [];
-
-        foreach (self::IDENTITY_ASSETS as $key => [$folder, $maxDimension]) {
-            $field = str($key)->after('site_')->value(); // site_logo -> logo, etc.
-            $current = Settings::get($key, config("theme.defaults.$key"));
-
-            if ($request->hasFile($field)) {
-                $uploader->delete($current ?: null);
-                $updates[$key] = $uploader->store($request->file($field), $folder, $maxDimension);
-            } elseif ($request->boolean('remove_'.$field)) {
-                $uploader->delete($current ?: null);
-                $updates[$key] = '';
-            }
-        }
-
-        if ($updates !== []) {
-            Settings::setMany($updates);
-        }
+        Settings::setMany([
+            'site_logo' => $data['site_logo'] ?? '',
+            'site_favicon' => $data['site_favicon'] ?? '',
+            'site_footer_logo' => $data['site_footer_logo'] ?? '',
+        ]);
 
         if ($request->ajax()) {
             return $this->fragment(view('admin.theme._panel', $this->theme()), 'Identité visuelle mise à jour.');
@@ -130,7 +112,7 @@ class ThemeController extends Controller
         return [
             'theme' => collect(self::KEYS)->mapWithKeys(fn ($key) => [$key => Settings::get($key, config("theme.defaults.$key"))]),
             'presets' => config('theme.presets'),
-            'identity' => collect(array_keys(self::IDENTITY_ASSETS))->mapWithKeys(fn ($key) => [$key => Settings::get($key, config("theme.defaults.$key"))]),
+            'identity' => collect(self::IDENTITY_KEYS)->mapWithKeys(fn ($key) => [$key => Settings::get($key, config("theme.defaults.$key"))]),
         ];
     }
 }

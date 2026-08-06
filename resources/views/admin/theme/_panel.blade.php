@@ -22,33 +22,28 @@
 <div id="theme-panel" class="space-y-6">
     @php
         $assets = [
-            'logo' => ['key' => 'site_logo', 'label' => 'Logo (barre de navigation)', 'help' => 'Affiché à la place de l\'icône par défaut dans l\'en-tête.'],
-            'favicon' => ['key' => 'site_favicon', 'label' => 'Favicon (onglet du navigateur)', 'help' => 'PNG carré recommandé.'],
-            'footer_logo' => ['key' => 'site_footer_logo', 'label' => 'Logo (pied de page)', 'help' => 'Affiché au-dessus du texte du footer.'],
+            'site_logo' => ['label' => 'Logo (barre de navigation)', 'help' => 'Affiché à la place de l\'icône par défaut dans l\'en-tête.'],
+            'site_favicon' => ['label' => 'Favicon (onglet du navigateur)', 'help' => 'PNG carré recommandé.'],
+            'site_footer_logo' => ['label' => 'Logo (pied de page)', 'help' => 'Affiché au-dessus du texte du footer.'],
         ];
     @endphp
 
-    <form method="post" action="{{ route('admin.theme.identity') }}" class="card space-y-4 p-5" enctype="multipart/form-data" data-remote="replace" data-target="#theme-panel">
+    <form method="post" action="{{ route('admin.theme.identity') }}" class="card space-y-4 p-5" data-remote="replace" data-target="#theme-panel">
         @csrf @method('patch')
         <h2 class="text-sm font-semibold text-ink">Identité visuelle</h2>
+        <p class="text-xs text-muted">Chaque champ attend un lien direct vers une image déjà hébergée (PNG recommandé), par ex. <code>https://exemple.com/logo.png</code>. Laissez vide pour revenir à l'affichage par défaut.</p>
         <div class="grid gap-4 sm:grid-cols-3">
-            @foreach($assets as $field => $meta)
+            @foreach($assets as $key => $meta)
                 <div class="space-y-2">
-                    <label class="block text-xs font-medium text-ink">{{ $meta['label'] }}</label>
+                    <label for="{{ $key }}" class="block text-xs font-medium text-ink">{{ $meta['label'] }}</label>
                     <div class="flex h-16 items-center justify-center rounded-lg border border-dashed border-ink/15 bg-ink/5 p-2">
-                        @if($identity[$meta['key']] ?? null)
-                            <img src="{{ asset('storage/'.$identity[$meta['key']]) }}" alt="" class="max-h-full max-w-full object-contain">
+                        @if($identity[$key] ?? null)
+                            <img src="{{ $identity[$key] }}" alt="" class="max-h-full max-w-full object-contain" onerror="this.style.opacity=0.2">
                         @else
                             <span class="text-xs text-muted">Aucun</span>
                         @endif
                     </div>
-                    <input type="file" name="{{ $field }}" accept="image/png,image/jpeg,image/gif,image/webp" class="field text-xs">
-                    @if($identity[$meta['key']] ?? null)
-                        <label class="flex items-center gap-1.5 text-xs text-muted">
-                            <input type="checkbox" name="remove_{{ $field }}" value="1" class="rounded border-ink/15">
-                            Retirer
-                        </label>
-                    @endif
+                    <input id="{{ $key }}" type="url" name="{{ $key }}" value="{{ old($key, $identity[$key] ?? '') }}" placeholder="https://…/logo.png" class="field text-xs">
                     <p class="text-[11px] text-muted">{{ $meta['help'] }}</p>
                 </div>
             @endforeach
