@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-#[Fillable(['topic_id', 'user_id', 'content', 'edited_at'])]
+#[Fillable(['topic_id', 'user_id', 'parent_id', 'content', 'edited_at'])]
 class Post extends Model
 {
     use HasFactory, SoftDeletes;
@@ -34,6 +34,16 @@ class Post extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function parent(): BelongsTo
+    {
+        return $this->belongsTo(Post::class, 'parent_id');
+    }
+
+    public function replies(): HasMany
+    {
+        return $this->hasMany(Post::class, 'parent_id');
+    }
+
     public function votes(): HasMany
     {
         return $this->hasMany(PostVote::class);
@@ -44,7 +54,13 @@ class Post extends Model
         return $this->morphMany(Report::class, 'reportable');
     }
 
-    public function score(): int
+    /**
+     * Calcule le score au vol (requête à part). Ne pas nommer cette méthode "score" :
+     * Eloquent interprète toute méthode publique sans argument accédée comme propriété
+     * ($post->score) comme une tentative de relation, et plante si `score` n'a pas été
+     * pré-chargé en attribut via withSum/loadSum('votes as score', 'value').
+     */
+    public function totalScore(): int
     {
         return (int) $this->votes()->sum('value');
     }

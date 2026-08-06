@@ -21,9 +21,9 @@ class SitemapController extends Controller
                 $urls->push(['loc' => route('categories.show', $category), 'priority' => '0.7']);
             });
 
-            Topic::query()->whereNull('deleted_at')->get(['slug', 'updated_at'])->each(function (Topic $topic) use ($urls) {
+            Topic::query()->whereNull('deleted_at')->with('category')->get(['id', 'slug', 'category_id', 'updated_at'])->each(function (Topic $topic) use ($urls) {
                 $urls->push([
-                    'loc' => route('topics.show', $topic),
+                    'loc' => route('topics.show', [$topic->category, $topic]),
                     'lastmod' => $topic->updated_at->toAtomString(),
                     'priority' => '0.5',
                 ]);

@@ -4,10 +4,40 @@
     $canModerate = auth()->check() && auth()->user()->can('moderate', $topic);
     $canReply = auth()->check() && auth()->user()->can('reply', $topic);
     $canReport = auth()->check() && auth()->id() !== $topic->user_id;
+    $canVoteTopic = auth()->check() && auth()->user()->can('vote', $topic);
+    $topicUserVote = $topic->votes?->first()?->value;
     $csrf = csrf_token();
 @endphp
 
 <x-app-layout :title="$topic->title">
+    <x-slot:sidebar>
+        <div class="card p-4 text-sm">
+            <h2 class="mb-3 font-semibold text-ink">À propos du sujet</h2>
+            <dl class="space-y-2 text-muted">
+                <div class="flex items-center justify-between gap-2">
+                    <dt>Auteur</dt>
+                    <dd class="truncate text-ink"><a href="{{ route('profile.show', $topic->user) }}" class="hover:underline">{{ $topic->user->displayName() }}</a></dd>
+                </div>
+                <div class="flex items-center justify-between gap-2">
+                    <dt>Catégorie</dt>
+                    <dd class="truncate text-ink"><a href="{{ route('categories.show', $topic->category) }}" class="hover:underline">{{ $topic->category->name }}</a></dd>
+                </div>
+                <div class="flex items-center justify-between gap-2">
+                    <dt>Score</dt>
+                    <dd class="text-ink">{{ $topic->score ?? 0 }}</dd>
+                </div>
+                <div class="flex items-center justify-between gap-2">
+                    <dt>Réponses</dt>
+                    <dd class="text-ink">{{ $topic->posts_count }}</dd>
+                </div>
+                <div class="flex items-center justify-between gap-2">
+                    <dt>Créé</dt>
+                    <dd class="text-ink">{{ $topic->created_at->diffForHumans() }}</dd>
+                </div>
+            </dl>
+        </div>
+    </x-slot:sidebar>
+
     <nav class="mb-4 text-sm text-muted">
         <a href="{{ route('categories.show', $topic->category) }}" class="hover:text-ink">{{ $topic->category->name }}</a>
         <span class="mx-1">/</span>
@@ -15,6 +45,7 @@
     </nav>
 
     <div
+        class="card mb-4 p-4 sm:p-5"
         x-data="{
             editingTitle: false,
             title: @js($topic->title),
@@ -66,71 +97,82 @@
                     .catch(() => this.fail());
             },
         }"
-        class="mb-6"
     >
-        <div x-show="!editingTitle" class="flex flex-wrap items-start justify-between gap-3">
-            <div>
-                <h1 class="flex items-center gap-1.5 text-lg font-semibold text-ink">
-                    <template x-if="pinned"><x-icon name="pin" class="h-4 w-4 text-brand" /></template>
-                    <template x-if="locked"><x-icon name="lock" class="h-4 w-4 text-muted" /></template>
-                    <span x-text="title"></span>
-                </h1>
-                <p class="mt-1 text-sm text-muted">
-                    Par <a href="{{ route('profile.show', $topic->user) }}" class="font-medium text-ink hover:underline">{{ $topic->user->displayName() }}</a>
-                    <x-role-badge :role="$topic->user->role" />
-                    · {{ $topic->created_at->diffForHumans() }}
-                    <template x-if="locked"> · <span class="text-muted">verrouillé</span></template>
-                </p>
-            </div>
-            <div class="flex flex-wrap items-center gap-3 text-sm">
-                @if($canEditTitle)
-                    <button type="button" @click="editingTitle = true" class="text-muted hover:text-ink">Modifier le titre</button>
-                @endif
-                @if($canDeleteTopic)
-                    <form method="post" action="{{ route('topics.destroy', $topic) }}">
-                        @csrf @method('delete')
-                        <x-confirm-submit
-                            title="Supprimer ce sujet ?"
-                            message="Le sujet et tous ses messages seront définitivement supprimés."
-                        />
-                    </form>
-                @endif
-                @if($canReport)
-                    <x-forum.report-button :reportable="$topic" route="topics.reports.store" />
-                @endif
-            </div>
-        </div>
+        <div class="flex gap-3">
+            <x-forum.vote
+                size="md"
+                :score="$topic->score ?? 0"
+                :user-vote="$topicUserVote"
+                :can-vote="$canVoteTopic"
+                :action="route('topics.vote', $topic)"
+            />
 
-        <div x-show="editingTitle" x-cloak class="flex gap-2">
-            <input type="text" x-model="title" maxlength="180" class="field" required>
-            <button type="button" @click="saveTitle()" :disabled="loading" class="btn-primary">Enregistrer</button>
-            <button type="button" @click="editingTitle = false" class="btn-secondary">Annuler</button>
-        </div>
-
-        @if($canModerate)
-            <div class="mt-3 flex flex-wrap items-center gap-2 rounded-lg border border-dashed border-ink/15 p-3 text-xs">
-                <span class="font-medium text-muted">Modération :</span>
-                <button type="button" @click="toggleLock()" :disabled="loading" class="btn-ghost !px-2 !py-1" x-text="locked ? 'Déverrouiller' : 'Verrouiller'"></button>
-                <button type="button" @click="togglePin()" :disabled="loading" class="btn-ghost !px-2 !py-1" x-text="pinned ? 'Désépingler' : 'Épingler'"></button>
-                <div class="flex items-center gap-1">
-                    <select class="field !py-1 text-xs" @change="move($event.target.value)">
-                        @foreach(\App\Models\Category::query()->orderBy('name')->get() as $cat)
-                            <option value="{{ $cat->id }}" @selected($cat->id === $topic->category_id)>{{ $cat->name }}</option>
-                        @endforeach
-                    </select>
-                    <span class="text-muted">Déplacer</span>
+            <div class="min-w-0 flex-1">
+                <div x-show="!editingTitle" class="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                        <h1 class="flex items-center gap-1.5 text-lg font-semibold text-ink">
+                            <template x-if="pinned"><x-icon name="pin" class="h-4 w-4 text-brand" /></template>
+                            <template x-if="locked"><x-icon name="lock" class="h-4 w-4 text-muted" /></template>
+                            <span x-text="title"></span>
+                        </h1>
+                        <p class="mt-1 text-sm text-muted">
+                            Par <a href="{{ route('profile.show', $topic->user) }}" class="font-medium text-ink hover:underline">{{ $topic->user->displayName() }}</a>
+                            <x-role-badge :role="$topic->user->role" />
+                            · {{ $topic->created_at->diffForHumans() }}
+                            <template x-if="locked"> · <span class="text-muted">verrouillé</span></template>
+                        </p>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-3 text-sm">
+                        @if($canEditTitle)
+                            <button type="button" @click="editingTitle = true" class="text-muted hover:text-ink">Modifier le titre</button>
+                        @endif
+                        @if($canDeleteTopic)
+                            <form method="post" action="{{ route('topics.destroy', $topic) }}">
+                                @csrf @method('delete')
+                                <x-confirm-submit
+                                    title="Supprimer ce sujet ?"
+                                    message="Le sujet et tous ses messages seront définitivement supprimés."
+                                />
+                            </form>
+                        @endif
+                        @if($canReport)
+                            <x-forum.report-button :reportable="$topic" route="topics.reports.store" />
+                        @endif
+                    </div>
                 </div>
+
+                <div x-show="editingTitle" x-cloak class="flex gap-2">
+                    <input type="text" x-model="title" maxlength="180" class="field" required>
+                    <button type="button" @click="saveTitle()" :disabled="loading" class="btn-primary">Enregistrer</button>
+                    <button type="button" @click="editingTitle = false" class="btn-secondary">Annuler</button>
+                </div>
+
+                @if($canModerate)
+                    <div class="mt-3 flex flex-wrap items-center gap-2 rounded-lg border border-dashed border-ink/15 p-3 text-xs">
+                        <span class="font-medium text-muted">Modération :</span>
+                        <button type="button" @click="toggleLock()" :disabled="loading" class="btn-ghost !px-2 !py-1" x-text="locked ? 'Déverrouiller' : 'Verrouiller'"></button>
+                        <button type="button" @click="togglePin()" :disabled="loading" class="btn-ghost !px-2 !py-1" x-text="pinned ? 'Désépingler' : 'Épingler'"></button>
+                        <div class="flex items-center gap-1">
+                            <select class="field !py-1 text-xs" @change="move($event.target.value)">
+                                @foreach(\App\Models\Category::query()->orderBy('name')->get() as $cat)
+                                    <option value="{{ $cat->id }}" @selected($cat->id === $topic->category_id)>{{ $cat->name }}</option>
+                                @endforeach
+                            </select>
+                            <span class="text-muted">Déplacer</span>
+                        </div>
+                    </div>
+                @endif
             </div>
-        @endif
+        </div>
     </div>
 
-    <div id="posts-list" class="space-y-4">
-        @foreach($posts as $post)
-            <x-forum.post :post="$post" />
-        @endforeach
+    <div id="posts-list" class="space-y-3">
+        @forelse($posts as $post)
+            <x-forum.post-thread :post="$post" :topic="$topic" :can-reply="$canReply" />
+        @empty
+            <p class="card px-4 py-6 text-center text-sm text-muted">Aucune réponse pour le moment. Soyez le premier à répondre !</p>
+        @endforelse
     </div>
-
-    <div class="mt-4">{{ $posts->links() }}</div>
 
     <div class="card mt-6 p-4 sm:p-5">
         @if($topic->locked_at)

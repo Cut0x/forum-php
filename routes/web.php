@@ -16,6 +16,8 @@ use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\ThemeController;
 use App\Http\Controllers\TopicController;
+use App\Http\Controllers\TopicVoteController;
+use App\Models\Topic;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', HomeController::class)->name('home');
@@ -27,7 +29,11 @@ Route::get('/emotes', EmoteController::class)->name('emotes.index');
 Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
 Route::get('/categories/{category:slug}', [CategoryController::class, 'show'])->name('categories.show');
 
-Route::get('/topics/{topic:slug}', [TopicController::class, 'show'])->name('topics.show');
+Route::get('/{category:slug}/topic/{topic:slug}', [TopicController::class, 'show'])->name('topics.show');
+// Ancienne URL (avant l'introduction du préfixe catégorie) : redirection permanente pour ne pas casser les liens déjà partagés.
+Route::get('/topics/{topic:slug}', function (Topic $topic) {
+    return redirect()->route('topics.show', [$topic->category, $topic], 301);
+})->name('topics.show.legacy');
 Route::get('/profile/{user:username}', [ProfileController::class, 'show'])->name('profile.show');
 
 Route::middleware('auth')->group(function () {
@@ -35,6 +41,8 @@ Route::middleware('auth')->group(function () {
         ->middleware('not_suspended')->name('topics.store');
     Route::patch('/topics/{topic:slug}', [TopicController::class, 'update'])->name('topics.update');
     Route::delete('/topics/{topic:slug}', [TopicController::class, 'destroy'])->name('topics.destroy');
+    Route::post('/topics/{topic:slug}/vote', [TopicVoteController::class, 'store'])
+        ->middleware('not_suspended')->name('topics.vote');
 
     Route::post('/topics/{topic:slug}/posts', [PostController::class, 'store'])
         ->middleware('not_suspended')->name('posts.store');

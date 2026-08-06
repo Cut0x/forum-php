@@ -8,6 +8,7 @@ use App\Models\Category;
 use App\Models\Topic;
 use App\Services\BadgeAwarder;
 use App\Services\MentionNotifier;
+use App\Services\PostThreadBuilder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -15,16 +16,27 @@ use Illuminate\View\View;
 
 class TopicController extends Controller
 {
-    public function show(Topic $topic): View
+    public function show(Category $category, Topic $topic): RedirectResponse|View
     {
-        $topic->load(['category', 'user.badges']);
+        // Le sujet a été déplacé depuis (modération) : on ne casse pas le lien, on redirige
+        // vers son URL canonique plutôt que de renvoyer une 404.
+        if ($topic->category_id !== $category->id) {
+            return redirect()->route('topics.show', [$topic->category, $topic], 301);
+        }
 
-        $posts = $topic->posts()
+        $topic->load(['category', 'user.badges']);
+        $topic->loadSum('votes as score', 'value');
+        $topic->load(['votes' => fn ($q) => $q->where('user_id', auth()->id() ?? 0)]);
+        $topic->loadCount('posts');
+
+        $flatPosts = $topic->posts()
             ->withTrashed()
-            ->with(['user.badges', 'votes' => fn ($q) => $q->where('user_id', auth()->id())])
+            ->with(['user.badges', 'votes' => fn ($q) => $q->where('user_id', auth()->id() ?? 0)])
             ->withSum('votes as score', 'value')
             ->orderBy('created_at')
-            ->paginate(30);
+            ->get();
+
+        $posts = app(PostThreadBuilder::class)->build($flatPosts);
 
         return view('topics.show', compact('topic', 'posts'));
     }
@@ -48,7 +60,7 @@ class TopicController extends Controller
         app(BadgeAwarder::class)->awardFor($request->user());
         app(MentionNotifier::class)->notify($post, $request->user());
 
-        return redirect()->route('topics.show', $topic)->with('success', 'Sujet publié.');
+        return redirect()->route('topics.show', [$category, $topic])->with('success', 'Sujet publié.');
     }
 
     public function update(UpdateTopicRequest $request, Topic $topic): RedirectResponse|JsonResponse

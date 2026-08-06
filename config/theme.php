@@ -8,6 +8,9 @@ return [
         'footer_link' => '',
         'stripe_enabled' => '0',
         'stripe_url' => '',
+        'site_logo' => '',
+        'site_favicon' => '',
+        'site_footer_logo' => '',
         'theme_light_bg' => '#f6f4ef',
         'theme_light_surface' => '#ffffff',
         'theme_light_text' => '#1f2937',
@@ -81,28 +84,7 @@ return [
         ],
     ],
 
-    'badges' => [
-        ['name' => 'Fondateur', 'code' => 'founder', 'icon' => 'founder.png', 'color' => '#4f8cff'],
-        ['name' => 'Admin', 'code' => 'admin', 'icon' => 'admin.png', 'color' => '#ff4d4f'],
-        ['name' => 'Modérateur', 'code' => 'moderator', 'icon' => 'moderator.png', 'color' => '#7c5cff'],
-        ['name' => 'Contributeur', 'code' => 'contributor', 'icon' => 'contributor.png', 'color' => '#16a34a'],
-        ['name' => 'Premier message', 'code' => 'starter', 'icon' => 'starter.png', 'color' => '#4f8cff'],
-        ['name' => '10 messages', 'code' => 'writer', 'icon' => 'writer.png', 'color' => '#00d1b2'],
-        ['name' => '25 messages', 'code' => 'speaker', 'icon' => 'speaker.png', 'color' => '#ffb020'],
-        ['name' => '50 messages', 'code' => 'veteran', 'icon' => 'veteran.png', 'color' => '#7c5cff'],
-        ['name' => 'Premier sujet', 'code' => 'first_topic', 'icon' => 'first_topic.png', 'color' => '#ff4d4f'],
-        ['name' => '10 sujets', 'code' => 'topics_10', 'icon' => 'topics_10.png', 'color' => '#ff4d4f'],
-        ['name' => 'Donateur', 'code' => 'donator', 'icon' => 'donator.png', 'color' => '#00c2ff'],
-    ],
-
-    // Règles d'attribution automatique des badges liés à l'activité.
-    'badge_rules' => [
-        'starter' => ['min_posts' => 1, 'min_topics' => 0],
-        'writer' => ['min_posts' => 10, 'min_topics' => 0],
-        'speaker' => ['min_posts' => 25, 'min_topics' => 0],
-        'veteran' => ['min_posts' => 50, 'min_topics' => 0],
-        'first_topic' => ['min_posts' => 0, 'min_topics' => 1],
-        'topics_10' => ['min_posts' => 0, 'min_topics' => 10],
-        'contributor' => ['min_posts' => 5, 'min_topics' => 1],
-    ],
+    // Les badges par défaut et leurs règles d'attribution vivent désormais dans
+    // database/seeders/BadgeSeeder.php et dans la table `badges` (colonnes rule_type/rule_value),
+    // éditables depuis /admin/badges. Voir App\Models\Badge::ruleTypes().
 ];

@@ -17,6 +17,9 @@ class ThemeController extends Controller
         'theme_font',
     ];
 
+    /** Réglages d'identité visuelle : chacun est un lien direct vers une image (PNG recommandé). */
+    protected const IDENTITY_KEYS = ['site_logo', 'site_favicon', 'site_footer_logo'];
+
     public function edit(): View
     {
         return view('admin.theme', $this->theme());
@@ -47,6 +50,27 @@ class ThemeController extends Controller
         }
 
         return back()->with('success', 'Thème mis à jour.');
+    }
+
+    public function updateIdentity(Request $request): RedirectResponse|Response
+    {
+        $data = $request->validate([
+            'site_logo' => ['nullable', 'url', 'max:2048'],
+            'site_favicon' => ['nullable', 'url', 'max:2048'],
+            'site_footer_logo' => ['nullable', 'url', 'max:2048'],
+        ]);
+
+        Settings::setMany([
+            'site_logo' => $data['site_logo'] ?? '',
+            'site_favicon' => $data['site_favicon'] ?? '',
+            'site_footer_logo' => $data['site_footer_logo'] ?? '',
+        ]);
+
+        if ($request->ajax()) {
+            return $this->fragment(view('admin.theme._panel', $this->theme()), 'Identité visuelle mise à jour.');
+        }
+
+        return back()->with('success', 'Identité visuelle mise à jour.');
     }
 
     public function preset(Request $request): RedirectResponse|Response
@@ -88,6 +112,7 @@ class ThemeController extends Controller
         return [
             'theme' => collect(self::KEYS)->mapWithKeys(fn ($key) => [$key => Settings::get($key, config("theme.defaults.$key"))]),
             'presets' => config('theme.presets'),
+            'identity' => collect(self::IDENTITY_KEYS)->mapWithKeys(fn ($key) => [$key => Settings::get($key, config("theme.defaults.$key"))]),
         ];
     }
 }

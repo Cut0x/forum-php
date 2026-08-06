@@ -4,7 +4,7 @@
     <button type="button" @click="open = !open" @click.outside="open = false" class="text-muted hover:text-red-600">
         Signaler
     </button>
-    <div x-show="open" x-cloak x-transition class="card absolute right-0 z-10 mt-2 w-56 p-3 text-left shadow-lg">
+    <div x-show="open" x-cloak x-transition class="card absolute right-0 z-20 mt-2 w-56 p-3 text-left shadow-xl">
         <form method="post" action="{{ route($route, $reportable) }}" data-remote="none" @submit="open = false">
             @csrf
             <label class="text-xs font-medium text-ink">Raison</label>

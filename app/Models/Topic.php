@@ -40,9 +40,25 @@ class Topic extends Model
         return $this->hasMany(Post::class);
     }
 
+    public function votes(): HasMany
+    {
+        return $this->hasMany(TopicVote::class);
+    }
+
     public function reports(): MorphMany
     {
         return $this->morphMany(Report::class, 'reportable');
+    }
+
+    /**
+     * Calcule le score au vol (requête à part). Ne pas nommer cette méthode "score" :
+     * Eloquent interprète toute méthode publique sans argument accédée comme propriété
+     * ($topic->score) comme une tentative de relation, et plante si `score` n'a pas été
+     * pré-chargé en attribut via withSum/loadSum('votes as score', 'value').
+     */
+    public function totalScore(): int
+    {
+        return (int) $this->votes()->sum('value');
     }
 
     public function isLocked(): bool

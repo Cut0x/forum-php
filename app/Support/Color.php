@@ -24,4 +24,14 @@ class Color
             hexdec(substr($hex, 4, 2)),
         ]);
     }
+
+    /**
+     * Dérive une teinte (0-359) stable à partir d'un libellé (slug de catégorie, nom…)
+     * pour donner à chaque catégorie une pastille de couleur distincte, façon icône
+     * de communauté, sans dépendre d'un champ de couleur en base.
+     */
+    public static function hueForLabel(string $label): int
+    {
+        return abs(crc32($label)) % 360;
+    }
 }

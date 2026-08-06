@@ -16,7 +16,10 @@ class SearchController extends Controller
         if ($query !== '') {
             $needle = '%'.$query.'%';
             $results = Topic::query()
-                ->with('category')
+                ->with(['category', 'user'])
+                ->withCount('posts')
+                ->withSum('votes as score', 'value')
+                ->with(['votes' => fn ($q) => $q->where('user_id', auth()->id() ?? 0)])
                 ->whereNull('deleted_at')
                 ->where(function ($q) use ($needle) {
                     $q->where('title', 'like', $needle)

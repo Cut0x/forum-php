@@ -22,8 +22,8 @@ class ProfileController extends Controller
             'badges' => $user->badges->count(),
         ];
 
-        $recentTopics = $user->topics()->latest()->limit(5)->get(['id', 'title', 'slug', 'created_at']);
-        $recentPosts = $user->posts()->with('topic:id,title,slug')->latest()->limit(5)->get();
+        $recentTopics = $user->topics()->with('category')->latest()->limit(5)->get(['id', 'title', 'slug', 'category_id', 'created_at']);
+        $recentPosts = $user->posts()->with(['topic:id,title,slug,category_id', 'topic.category'])->latest()->limit(5)->get();
 
         return view('profile.show', compact('user', 'stats', 'recentTopics', 'recentPosts'));
     }

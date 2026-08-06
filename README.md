@@ -113,9 +113,12 @@ Pour un déploiement en production réel (serveur Linux, Apache ou Nginx, HTTPS,
 
 ## 6. Fonctionnalités
 
-- Catégories, sujets, messages en Markdown (mentions `@pseudo`, émotes `:nom:`, images), votes, badges, notifications.
+- Mise en page façon Reddit : sidebar de navigation/catégories, fil de sujets en cartes avec flèches de vote, sidebar contextuelle (infos catégorie/sujet).
+- Catégories, sujets et messages en Markdown (mentions `@pseudo`, émotes `:nom:`, images), **vote +1/-1 sur les sujets et sur les messages**, notifications.
+- **Réponses en fil de discussion** : chaque message peut être répondu individuellement (indentation + ligne de connexion vers le parent), avec pré-remplissage automatique de la mention `@pseudo` du message parent — ce qui déclenche automatiquement une notification à son auteur.
 - Profils (avatar, bio, liens), paramètres de compte (email, mot de passe, export de données, suppression de compte).
-- **Panel admin** (`/admin`, rôle `admin`) : réglages du site, thème (couleurs clair/sombre, police, presets), catégories, footer, badges, émotes, gestion des rôles.
+- **Badges à règles configurables** : chaque badge peut être manuel, ou attribué automatiquement selon un seuil de messages/sujets, l'ancienneté du compte, ou le rôle — le tout depuis `/admin/badges` (voir le wiki, page [Badges](https://github.com/Cut0x/forum-php/wiki/Badges)).
+- **Panel admin** (`/admin`, rôle `admin`) : réglages du site, thème (couleurs clair/sombre, police, logo de navigation, favicon, logo de pied de page, presets), catégories, footer, badges (icône, règle d'attribution), émotes, gestion des rôles.
 - **Panel de modération** (`/moderation`, rôles `moderator` et `admin`) : file de signalements, verrouillage/épinglage/déplacement de sujets, suppression de messages, avertissements et suspensions temporaires d'utilisateurs, journal des actions.
 
 ## 7. Tests

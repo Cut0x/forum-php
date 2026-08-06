@@ -17,7 +17,7 @@
             @php
                 $reportable = $report->reportable;
                 $isTopic = $reportable instanceof \App\Models\Topic;
-                $link = $reportable ? ($isTopic ? route('topics.show', $reportable) : route('topics.show', $reportable->topic).'#post-'.$reportable->id) : '#';
+                $link = $reportable ? ($isTopic ? route('topics.show', [$reportable->category, $reportable]) : route('topics.show', [$reportable->topic->category, $reportable->topic]).'#post-'.$reportable->id) : '#';
                 $excerpt = $reportable ? ($isTopic ? $reportable->title : \Illuminate\Support\Str::limit(strip_tags($reportable->content), 140)) : 'Contenu supprimé';
             @endphp
             <div class="p-4">

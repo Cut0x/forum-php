@@ -2,11 +2,14 @@
 
 namespace Tests\Feature;
 
+use App\Models\Badge;
 use App\Models\Category;
 use App\Models\Post;
 use App\Models\Topic;
 use App\Models\User;
+use App\Notifications\UserMentioned;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
 class ForumTest extends TestCase
@@ -18,7 +21,7 @@ class ForumTest extends TestCase
         $topic = Topic::factory()->for(Category::factory())->create();
 
         $this->get(route('categories.index'))->assertOk();
-        $this->get(route('topics.show', $topic))->assertOk()->assertSee($topic->title);
+        $this->get(route('topics.show', [$topic->category, $topic]))->assertOk()->assertSee($topic->title);
     }
 
     public function test_member_can_create_a_topic(): void
@@ -32,7 +35,7 @@ class ForumTest extends TestCase
         ]);
 
         $topic = Topic::query()->where('title', 'Mon premier sujet')->first();
-        $response->assertRedirect(route('topics.show', $topic));
+        $response->assertRedirect(route('topics.show', [$category, $topic]));
         $this->assertDatabaseHas('posts', ['topic_id' => $topic->id, 'user_id' => $user->id]);
     }
 
@@ -58,6 +61,69 @@ class ForumTest extends TestCase
         $this->actingAs($voter)->post(route('posts.vote', $post), ['value' => 1])->assertRedirect();
 
         $this->assertDatabaseHas('post_votes', ['post_id' => $post->id, 'user_id' => $voter->id, 'value' => 1]);
+    }
+
+    public function test_member_can_reply_to_a_specific_post_and_the_parent_author_is_mentioned(): void
+    {
+        Notification::fake();
+
+        $parentAuthor = User::factory()->create(['username' => 'helene_blanchard']);
+        $replier = User::factory()->create();
+        $topic = Topic::factory()->for(Category::factory())->create();
+        $parentPost = Post::factory()->for($topic)->create(['user_id' => $parentAuthor->id]);
+
+        $this->actingAs($replier)->post(route('posts.store', $topic), [
+            'parent_id' => $parentPost->id,
+            'content' => '@helene_blanchard Merci pour ta réponse !',
+        ])->assertRedirect();
+
+        $reply = Post::query()->where('parent_id', $parentPost->id)->first();
+        $this->assertNotNull($reply);
+        $this->assertSame($replier->id, $reply->user_id);
+
+        Notification::assertSentTo($parentAuthor, UserMentioned::class);
+    }
+
+    public function test_ajax_reply_to_a_post_renders_the_fragment_without_error(): void
+    {
+        // Reproduit le flux réel du bouton "Répondre" inline (data-remote="append"), qui envoie
+        // une requête AJAX — contrairement aux autres tests de ce fichier qui postent en direct
+        // et empruntent la branche redirect(), jamais la branche fragment() qui rend la vue.
+        $parentAuthor = User::factory()->create();
+        $replier = User::factory()->create();
+        $topic = Topic::factory()->for(Category::factory())->create();
+        $parentPost = Post::factory()->for($topic)->create(['user_id' => $parentAuthor->id]);
+
+        $response = $this->actingAs($replier)->post(route('posts.store', $topic), [
+            'parent_id' => $parentPost->id,
+            'content' => 'Réponse imbriquée via AJAX.',
+        ], ['X-Requested-With' => 'XMLHttpRequest']);
+
+        $response->assertOk();
+        $response->assertSee('Réponse imbriquée via AJAX.', false);
+    }
+
+    public function test_reply_cannot_be_attached_to_a_post_from_another_topic(): void
+    {
+        $user = User::factory()->create();
+        $topic = Topic::factory()->for(Category::factory())->create();
+        $otherTopicPost = Post::factory()->for(Topic::factory()->for(Category::factory()))->create();
+
+        $this->actingAs($user)->post(route('posts.store', $topic), [
+            'parent_id' => $otherTopicPost->id,
+            'content' => 'Réponse invalide.',
+        ])->assertSessionHasErrors('parent_id');
+    }
+
+    public function test_member_can_vote_on_a_topic(): void
+    {
+        $author = User::factory()->create();
+        $voter = User::factory()->create();
+        $topic = Topic::factory()->for(Category::factory())->create(['user_id' => $author->id]);
+
+        $this->actingAs($voter)->post(route('topics.vote', $topic), ['value' => 1])->assertRedirect();
+
+        $this->assertDatabaseHas('topic_votes', ['topic_id' => $topic->id, 'user_id' => $voter->id, 'value' => 1]);
     }
 
     public function test_member_can_report_a_topic(): void
@@ -105,6 +171,48 @@ class ForumTest extends TestCase
 
         $response->assertRedirect();
         $this->assertSame('Mon Forum', \App\Support\Settings::get('site_title'));
+    }
+
+    public function test_badge_awarder_grants_a_posts_count_badge_automatically(): void
+    {
+        $badge = Badge::query()->create([
+            'name' => 'Premier message',
+            'code' => 'test_first_post',
+            'icon' => 'test.png',
+            'color' => '#000000',
+            'rule_type' => Badge::RULE_POSTS_COUNT,
+            'rule_value' => '1',
+        ]);
+
+        $user = User::factory()->create();
+        $topic = Topic::factory()->for(Category::factory())->create();
+
+        $this->actingAs($user)->post(route('posts.store', $topic), [
+            'content' => 'Mon premier message.',
+        ])->assertRedirect();
+
+        $this->assertTrue($user->badges()->where('badges.id', $badge->id)->exists());
+    }
+
+    public function test_manual_badge_is_never_awarded_automatically(): void
+    {
+        $badge = Badge::query()->create([
+            'name' => 'Fondateur test',
+            'code' => 'test_founder',
+            'icon' => 'test.png',
+            'color' => '#000000',
+            'rule_type' => Badge::RULE_MANUAL,
+            'rule_value' => null,
+        ]);
+
+        $user = User::factory()->create();
+        $topic = Topic::factory()->for(Category::factory())->create();
+
+        $this->actingAs($user)->post(route('posts.store', $topic), [
+            'content' => 'Un message.',
+        ])->assertRedirect();
+
+        $this->assertFalse($user->badges()->where('badges.id', $badge->id)->exists());
     }
 
     public function test_suspended_user_cannot_reply(): void

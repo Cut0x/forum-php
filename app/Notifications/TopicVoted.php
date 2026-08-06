@@ -2,16 +2,16 @@
 
 namespace App\Notifications;
 
-use App\Models\Post;
+use App\Models\Topic;
 use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
 
-class PostVoted extends Notification
+class TopicVoted extends Notification
 {
     use Queueable;
 
-    public function __construct(public Post $post, public User $actor, public int $value) {}
+    public function __construct(public Topic $topic, public User $actor, public int $value) {}
 
     public function via(object $notifiable): array
     {
@@ -23,11 +23,10 @@ class PostVoted extends Notification
         $label = $this->value === 1 ? 'positif' : 'négatif';
 
         return [
-            'message' => $this->actor->displayName().' a laissé un vote '.$label.' sur votre message.',
-            'topic_id' => $this->post->topic_id,
-            'topic_slug' => $this->post->topic->slug,
-            'category_slug' => $this->post->topic->category->slug,
-            'post_id' => $this->post->id,
+            'message' => $this->actor->displayName().' a laissé un vote '.$label.' sur votre sujet.',
+            'topic_id' => $this->topic->id,
+            'topic_slug' => $this->topic->slug,
+            'category_slug' => $this->topic->category->slug,
             'actor_id' => $this->actor->id,
             'actor_username' => $this->actor->username,
             'actor_name' => $this->actor->displayName(),
