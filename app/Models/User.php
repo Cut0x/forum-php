@@ -59,6 +59,21 @@ class User extends Authenticatable
         return $this->belongsToMany(Badge::class, 'user_badges')->withPivot('awarded_at');
     }
 
+    /**
+     * Le badge à mettre en avant à côté du pseudo (ex : liste de messages) quand on ne peut
+     * en afficher qu'un seul. Le plus prioritaire l'emporte (réglable en admin) ; à priorité
+     * égale, le plus ancien obtenu. Suppose `badges` déjà chargée (sinon requête à la volée).
+     */
+    public function primaryBadge(): ?Badge
+    {
+        return $this->badges
+            ->sortBy([
+                ['priority', 'desc'],
+                ['pivot.awarded_at', 'asc'],
+            ])
+            ->first();
+    }
+
     public function warnings(): HasMany
     {
         return $this->hasMany(Warning::class);

@@ -8,20 +8,14 @@
                 <div class="flex flex-wrap items-center gap-2">
                     <h1 class="text-lg font-semibold text-ink">{{ $user->displayName() }}</h1>
                     <span class="text-sm text-muted">{{ '@'.$user->username }}</span>
-                    <x-role-badge :role="$user->role" />
+                    @foreach($user->badges->sortByDesc('priority') as $badge)
+                        <x-badge-tooltip :badge="$badge" />
+                    @endforeach
                 </div>
                 @if($user->bio)
                     <p class="mt-1 whitespace-pre-line text-sm text-muted">{{ $user->bio }}</p>
                 @endif
                 <p class="mt-2 text-xs text-muted">Inscrit le {{ $user->created_at->format('d/m/Y') }}</p>
-
-                @if($user->badges->isNotEmpty())
-                    <div class="mt-3 flex flex-wrap gap-2">
-                        @foreach($user->badges as $badge)
-                            <img src="{{ $badge->iconUrl }}" title="{{ $badge->name }}" alt="{{ $badge->name }}" class="h-6 w-6">
-                        @endforeach
-                    </div>
-                @endif
             </div>
             @if($canEdit)
                 <a href="{{ route('profile.edit') }}" class="btn-secondary shrink-0">Éditer le profil</a>

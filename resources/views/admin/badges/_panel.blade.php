@@ -4,10 +4,11 @@
     <form method="post" action="{{ route('admin.badges.store') }}" class="card space-y-3 p-5" enctype="multipart/form-data" data-remote="replace" data-target="#badges-panel" x-data="{ ruleType: 'manual' }">
         @csrf
         <h2 class="text-sm font-semibold text-ink">Nouveau badge</h2>
-        <div class="grid gap-3 sm:grid-cols-4">
+        <div class="grid gap-3 sm:grid-cols-5">
             <input type="text" name="name" placeholder="Nom" required class="field">
             <input type="text" name="code" placeholder="code_unique" required class="field">
             <input type="color" name="color" value="#0d6efd" class="h-10 w-full rounded border border-ink/15 bg-transparent">
+            <input type="number" name="priority" value="0" min="0" max="1000" title="Priorité (plus haut = badge mis en avant en priorité)" placeholder="Priorité" class="field">
             <select name="rule_type" x-model="ruleType" class="field">
                 @foreach($ruleTypes as $key => $label)
                     <option value="{{ $key }}">{{ $label }}</option>
@@ -60,6 +61,10 @@
                         <input type="file" name="icon_file" accept="image/png,image/jpeg,image/gif,image/webp" class="field text-xs">
                     </div>
                     <input type="text" name="icon" value="{{ $badge->icon }}" class="field text-xs" placeholder="ou nom de fichier statique">
+                    <label class="flex items-center gap-2 text-xs text-muted">
+                        Priorité
+                        <input type="number" name="priority" value="{{ $badge->priority }}" min="0" max="1000" title="Plus haut = badge mis en avant en priorité" class="field flex-1 text-xs">
+                    </label>
 
                     <select name="rule_type" x-model="ruleType" class="field text-xs">
                         @foreach($ruleTypes as $key => $label)

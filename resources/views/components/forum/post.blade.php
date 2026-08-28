@@ -27,7 +27,9 @@
             <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
                 <a href="{{ route('profile.show', $post->user) }}" class="text-sm font-semibold text-ink hover:underline">{{ $post->user->displayName() }}</a>
                 <span class="text-xs text-muted">{{ '@'.$post->user->username }}</span>
-                <x-role-badge :role="$post->user->role" />
+                @if($primaryBadge = $post->user->primaryBadge())
+                    <x-badge-tooltip :badge="$primaryBadge" size="h-5 w-5" />
+                @endif
                 <time class="text-xs text-muted">{{ $post->created_at->diffForHumans() }}</time>
                 @if($post->edited_at)
                     <span class="text-xs text-muted">· modifié</span>
