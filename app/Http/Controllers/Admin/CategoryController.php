@@ -60,6 +60,10 @@ class CategoryController extends Controller
 
     public function destroy(Request $request, Category $category): RedirectResponse|Response
     {
+        if ($category->topics()->withTrashed()->exists()) {
+            return $this->respond($request, 'Impossible de supprimer une catégorie contenant des sujets.', 'error');
+        }
+
         $category->delete();
 
         return $this->respond($request, 'Catégorie supprimée.');
@@ -70,12 +74,12 @@ class CategoryController extends Controller
         return Category::query()->orderBy('sort_order')->orderBy('name')->get();
     }
 
-    protected function respond(Request $request, string $message): RedirectResponse|Response
+    protected function respond(Request $request, string $message, string $type = 'success'): RedirectResponse|Response
     {
         if ($request->ajax()) {
-            return $this->fragment(view('admin.categories._panel', ['categories' => $this->all()]), $message);
+            return $this->fragment(view('admin.categories._panel', ['categories' => $this->all()]), $message, $type);
         }
 
-        return back()->with('success', $message);
+        return back()->with($type, $message);
     }
 }

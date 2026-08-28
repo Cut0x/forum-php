@@ -2,6 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Models\Category;
+use App\Models\Post;
+use App\Models\Topic;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -15,6 +18,19 @@ class ProfileTest extends TestCase
         $user = User::factory()->create();
 
         $response = $this->get(route('profile.show', $user));
+
+        $response->assertOk();
+    }
+
+    public function test_profile_page_does_not_crash_when_a_posted_topic_has_been_deleted(): void
+    {
+        $author = User::factory()->create();
+        $topic = Topic::factory()->for(Category::factory())->create();
+        Post::factory()->for($topic)->create(['user_id' => $author->id]);
+
+        $topic->delete();
+
+        $response = $this->get(route('profile.show', $author));
 
         $response->assertOk();
     }

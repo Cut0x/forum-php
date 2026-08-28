@@ -76,6 +76,20 @@ class Topic extends Model
         return 'slug';
     }
 
+    /**
+     * Cascade la suppression douce vers les posts du sujet : sans ça, les posts restent
+     * orphelins (topic soft-deleted mais toujours référencé), ce qui plante les pages
+     * qui accèdent à $post->topic sans vérifier qu'il existe encore (ex: profil utilisateur).
+     */
+    protected static function booted(): void
+    {
+        static::deleting(function (Topic $topic) {
+            if (! $topic->isForceDeleting()) {
+                $topic->posts()->delete();
+            }
+        });
+    }
+
     public static function uniqueSlug(string $title): string
     {
         $base = Str::slug($title) ?: 'sujet';

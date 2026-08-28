@@ -22,8 +22,10 @@ class ProfileController extends Controller
             'badges' => $user->badges->count(),
         ];
 
-        $recentTopics = $user->topics()->with('category')->latest()->limit(5)->get(['id', 'title', 'slug', 'category_id', 'created_at']);
-        $recentPosts = $user->posts()->with(['topic:id,title,slug,category_id', 'topic.category'])->latest()->limit(5)->get();
+        // whereHas filtre par sécurité les sujets/messages dont le parent (catégorie/sujet)
+        // n'existe plus, au cas où (ex: catégorie supprimée sans cascade).
+        $recentTopics = $user->topics()->whereHas('category')->with('category')->latest()->limit(5)->get(['id', 'title', 'slug', 'category_id', 'created_at']);
+        $recentPosts = $user->posts()->whereHas('topic')->with(['topic:id,title,slug,category_id', 'topic.category'])->latest()->limit(5)->get();
 
         return view('profile.show', compact('user', 'stats', 'recentTopics', 'recentPosts'));
     }
