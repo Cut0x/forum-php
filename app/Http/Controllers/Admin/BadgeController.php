@@ -22,6 +22,7 @@ class BadgeController extends Controller
     public function store(Request $request, BadgeIconUploader $uploader): RedirectResponse|Response
     {
         $data = $request->validate($this->rules($request));
+        $data['priority'] = $data['priority'] ?? 0;
 
         unset($data['icon_file']);
         if ($request->hasFile('icon_file')) {
@@ -36,6 +37,7 @@ class BadgeController extends Controller
     public function update(Request $request, Badge $badge, BadgeIconUploader $uploader): RedirectResponse|Response
     {
         $data = $request->validate($this->rules($request, $badge->id));
+        $data['priority'] = $data['priority'] ?? 0;
 
         unset($data['icon_file']);
         if ($request->hasFile('icon_file')) {
@@ -62,6 +64,7 @@ class BadgeController extends Controller
             'icon' => ['required_without:icon_file', 'nullable', 'string', 'max:255'],
             'icon_file' => ['nullable', 'image', 'mimes:png,jpg,jpeg,gif,webp', 'max:2048'],
             'color' => ['required', 'string', 'max:20'],
+            'priority' => ['nullable', 'integer', 'min:0', 'max:1000'],
             'rule_type' => ['required', Rule::in(array_keys(Badge::ruleTypes()))],
             'rule_value' => [
                 'nullable', 'string', 'max:20',

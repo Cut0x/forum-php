@@ -117,7 +117,6 @@
                         </h1>
                         <p class="mt-1 text-sm text-muted">
                             Par <a href="{{ route('profile.show', $topic->user) }}" class="font-medium text-ink hover:underline">{{ $topic->user->displayName() }}</a>
-                            <x-role-badge :role="$topic->user->role" />
                             · {{ $topic->created_at->diffForHumans() }}
                             <template x-if="locked"> · <span class="text-muted">verrouillé</span></template>
                         </p>

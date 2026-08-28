@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
-#[Fillable(['name', 'code', 'icon', 'color', 'rule_type', 'rule_value'])]
+#[Fillable(['name', 'code', 'icon', 'color', 'priority', 'rule_type', 'rule_value'])]
 class Badge extends Model
 {
     public const RULE_MANUAL = 'manual';
